@@ -1,26 +1,10 @@
-# Entornos virtuales
-venv/
+# Entorno virtual y secretos locales
 env/
-.venv/
-
-# Variables de entorno
 .env
 
-# Python
+# Archivos generados por Python y Django
 __pycache__/
 *.py[cod]
-*$py.class
-
-# Django
-*.log
-db.sqlite3
+*.sqlite3
 media/
 staticfiles/
-
-# IDEs
-.vscode/
-.idea/
-
-# Sistema operativo
-.DS_Store
-Thumbs.db
