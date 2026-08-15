@@ -6,7 +6,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import PerfilUsuario
+from .models import Direccion, PerfilUsuario
 
 
 Usuario = get_user_model()
@@ -89,3 +89,18 @@ class CerrarSesionSerializer(serializers.Serializer):
             RefreshToken(self.validated_data['refresh']).blacklist()
         except Exception as error:
             raise serializers.ValidationError({'refresh': 'El token de actualización no es válido.'}) from error
+
+class DireccionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Direccion
+        fields = (
+            'id',
+            'direccion',
+            'ciudad',
+            'barrio_sector',
+            'informacion_complementaria',
+            'es_principal',
+            'creada_en',
+            'actualizada_en',
+        )
+        read_only_fields = ('id', 'creada_en', 'actualizada_en')

@@ -2,8 +2,10 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.exceptions import PermissionDenied
+from .models import Direccion, PerfilUsuario
 
-from .serializers import CerrarSesionSerializer, InicioSesionSerializer, PerfilSerializer, RegistroSerializer
+from .serializers import CerrarSesionSerializer, DireccionSerializer, InicioSesionSerializer, PerfilSerializer, RegistroSerializer
 
 
 class RegistroView(generics.CreateAPIView):
@@ -35,3 +37,36 @@ class MiPerfilView(generics.RetrieveAPIView):
 
     def get_object(self):
         return self.request.user.perfil
+
+class DireccionListCreateView(generics.ListCreateAPIView):
+    serializer_class = DireccionSerializer
+
+    def get_queryset(self):
+        if self.request.user.perfil.rol != PerfilUsuario.Rol.CLIENTE:
+            raise PermissionDenied('Solo los clientes pueden consultar direcciones.')
+
+        return Direccion.objects.filter(
+            usuario=self.request.user
+        ).order_by('-es_principal', '-creada_en')
+
+    def perform_create(self, serializer):
+        if self.request.user.perfil.rol != PerfilUsuario.Rol.CLIENTE:
+            raise PermissionDenied('Solo los clientes pueden registrar direcciones.')
+
+        existe_direccion_principal = Direccion.objects.filter(
+            usuario=self.request.user,
+            es_principal=True,
+        ).exists()
+
+        es_principal = serializer.validated_data.get('es_principal', False)
+
+        if es_principal:
+            Direccion.objects.filter(
+                usuario=self.request.user,
+                es_principal=True,
+            ).update(es_principal=False)
+
+        serializer.save(
+            usuario=self.request.user,
+            es_principal=es_principal or not existe_direccion_principal,
+        )
