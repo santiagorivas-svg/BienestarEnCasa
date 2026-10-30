@@ -13,6 +13,7 @@ from .authentication import CookieJWTAuthentication  # <--- HABILITA LECTURA DE 
 
 from rest_framework.permissions import IsAuthenticated
 from catalogo.models import Servicio
+from django.db.models import Q
 from django.db.models import Prefetch
 from django.http import Http404
 from django.shortcuts import render, redirect
@@ -331,6 +332,42 @@ class ProveedorDetalleView(generics.RetrieveAPIView):
             .prefetch_related('multimedia', 'elementos'),
         ),
     )
+
+
+class ProveedorListaView(generics.ListAPIView):
+    """
+    Lista y busca proveedores por nombre, apellido o descripción profesional
+    para alimentar la sección de búsqueda en el catálogo del cliente.
+    """
+    serializer_class = PerfilProveedorSerializer # Trae los servicios de una vez
+    queryset = PerfilProveedor.objects.select_related('perfil_usuario__usuario').prefetch_related(
+        'zonas_atencion',
+        Prefetch(
+            'servicios',
+            queryset=Servicio.objects.filter(estado=Servicio.Estado.ACTIVO)
+            .select_related('categoria', 'proveedor__perfil_usuario__usuario')
+            .prefetch_related('multimedia', 'elementos'),
+        ),
+    )
+    permission_classes = [permissions.AllowAny] 
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search_query = self.request.GET.get('search', '').strip()
+        
+        if search_query:
+            # Permite buscar por nombre y apellido por separado (ej: "Manuel Pérez")
+            terminos = search_query.split()
+            q_filters = Q()
+            for termino in terminos:
+                q_filters &= (
+                    Q(perfil_usuario__usuario__first_name__icontains=termino) |
+                    Q(perfil_usuario__usuario__last_name__icontains=termino) |
+                    Q(descripcion_profesional__icontains=termino)
+                )
+            queryset = queryset.filter(q_filters)
+            
+        return queryset
 
     def retrieve(self, request, *args, **kwargs):
         try:
