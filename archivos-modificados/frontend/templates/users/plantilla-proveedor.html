@@ -1,0 +1,668 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Panel de Proveedor - Bienestar en Casa{% endblock %}
+
+{% block header_nav %}
+    {% include 'nav_proveedor.html' %}
+{% endblock %}
+
+{% block body %}
+{% include 'includes/solicitudes-ui.html' %}
+<div style="background-color: #f8fafc; min-height: calc(100vh - 72px); padding: 2rem 1rem; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing: border-box;">
+  <div style="max-width: 68rem; margin: 0 auto;">
+    
+    <!-- Encabezado del Perfil Proveedor -->
+    <div style="background-color: #ffffff; border-radius: 1.25rem; border: 1px solid #e2e8f0; padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; box-shadow: 0 1px 3px rgba(0,0,0,0.02); margin-bottom: 1.5rem;">
+      <div style="display: flex; align-items: center; gap: 1.25rem;">
+        <div style="width: 3.5rem; height: 3.5rem; background-color: #ccfbf1; border-radius: 9999px; display: flex; align-items: center; justify-content: center; color: #0d9488;">
+          <svg style="width: 1.8rem; height: 1.8rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+          </svg>
+        </div>
+        <div>
+          <span style="font-size: 0.75rem; font-weight: 800; color: #0d9488; text-transform: uppercase; letter-spacing: 0.05em;">PERFIL PROVEEDOR</span>
+          <h1 style="font-size: 1.85rem; font-weight: 800; color: #0f172a; margin: 0.1rem 0 0 0;">Panel de proveedor</h1>
+        </div>
+      </div>
+
+      <!-- Métricas del Panel -->
+      <div style="display: flex; gap: 1rem;">
+        <div style="background-color: #fef9c3; border-radius: 1rem; padding: 0.75rem 1.25rem; text-align: center; min-width: 80px;">
+          <div id="stat-pendientes" style="font-size: 1.5rem; font-weight: 800; color: #854d0e; line-height: 1;">0</div>
+          <span style="font-size: 0.75rem; font-weight: 700; color: #a16207;">Pendientes</span>
+        </div>
+        <div style="background-color: #f0fdf4; border-radius: 1rem; padding: 0.75rem 1.25rem; text-align: center; min-width: 80px;">
+          <div id="stat-clientes" style="font-size: 1.5rem; font-weight: 800; color: #166534; line-height: 1;">0</div>
+          <span style="font-size: 0.75rem; font-weight: 700; color: #15803d;">Clientes</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de Pestañas -->
+    <div style="display: flex; gap: 0.5rem; background-color: #f1f5f9; padding: 0.4rem; border-radius: 1.1rem; margin-bottom: 1.5rem;">
+      
+      <button type="button" class="tab-btn active" data-tab="tab-solicitudes" style="flex: 1; padding: 0.8rem 1rem; border: none; border-radius: 0.85rem; background-color: #ffffff; color: #0d9488; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-size: 0.95rem;">
+        <svg style="width: 1.1rem; height: 1.1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+        </svg>
+        Solicitudes entrantes
+        <span id="badge-count-pendientes" style="background-color: #f59e0b; color: #ffffff; border-radius: 9999px; padding: 0.15rem 0.55rem; font-size: 0.75rem; font-weight: 800;">0</span>
+      </button>
+
+      <button type="button" class="tab-btn" data-tab="tab-clientes" style="flex: 1; padding: 0.8rem 1rem; border: none; border-radius: 0.85rem; background-color: transparent; color: #64748b; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.95rem;">
+        <svg style="width: 1.1rem; height: 1.1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+        </svg>
+        Mis clientes
+      </button>
+
+      <button type="button" class="tab-btn" data-tab="tab-horario" style="flex: 1; padding: 0.8rem 1rem; border: none; border-radius: 0.85rem; background-color: transparent; color: #64748b; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.95rem;">
+        <svg style="width: 1.1rem; height: 1.1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+        </svg>
+        Mi horario
+      </button>
+    </div>
+
+    <!-- PESTAÑA 1: SOLICITUDES ENTRANTES -->
+    <div id="tab-solicitudes" class="tab-content" style="display: block;">
+      
+      <!-- Sección Por Responder -->
+      <div style="margin-bottom: 2rem;">
+        <h2 style="font-size: 0.85rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 1rem 0;">
+          POR RESPONDER
+        </h2>
+        <div id="contenedorPorResponder" style="display: flex; flex-direction: column; gap: 1rem;">
+          <div style="background-color: #ffffff; border-radius: 1.25rem; border: 1px solid #e2e8f0; padding: 2.5rem; text-align: center; color: #64748b;">
+            Cargando solicitudes pendientes...
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección Respondidas -->
+      <div>
+        <h2 style="font-size: 0.85rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 1rem 0;">
+          RESPONDIDAS
+        </h2>
+        <div id="contenedorRespondidas" style="display: flex; flex-direction: column; gap: 1rem;">
+          <div style="background-color: #ffffff; border-radius: 1.25rem; border: 1px solid #e2e8f0; padding: 2.5rem; text-align: center; color: #64748b;">
+            No tienes solicitudes respondidas aún.
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PESTAÑA 2: MIS CLIENTES -->
+    <div id="tab-clientes" class="tab-content" style="display: none;">
+      <div id="contenedorClientes" style="display: flex; flex-direction: column; gap: 1rem;">
+        <div style="background-color: #ffffff; border-radius: 1.25rem; border: 1px solid #e2e8f0; padding: 3rem; text-align: center; color: #64748b;">
+          Cargando citas con clientes...
+        </div>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 3: MI HORARIO -->
+    <div id="tab-horario" class="tab-content" style="display: none;">
+      
+      <div style="background-color: #ffffff; border-radius: 1.25rem; border: 1px solid #e2e8f0; padding: 1.75rem; margin-bottom: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+        <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0 0 0.25rem 0;">Días de atención</h3>
+        <p style="color: #64748b; font-size: 0.9rem; margin: 0 0 1.25rem 0;">Este horario es el mismo de Disponibilidad. Los clientes solo verán estas franjas.</p>
+        <div id="resumenHorarioReal" style="margin: 0 0 1rem 0; color: #0f172a; font-size: 0.9rem;">Cargando horario guardado...</div>
+        <p style="margin: 0;"><a href="/disponibilidad/" style="color: #0d9488; font-weight: 700; font-size: 0.9rem; text-decoration: underline;">Abrir configuración completa y periodos no disponibles</a></p>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const tabContents = document.querySelectorAll('.tab-content');
+  let todasLasSolicitudes = [];
+  let mapaServicios = {};
+  let disponibilidadProveedor = [];
+
+  // Pestañas
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      tabBtns.forEach(b => {
+        b.style.backgroundColor = 'transparent';
+        b.style.color = '#64748b';
+        b.style.boxShadow = 'none';
+      });
+      tabContents.forEach(c => c.style.display = 'none');
+
+      this.style.backgroundColor = '#ffffff';
+      this.style.color = '#0d9488';
+      this.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+
+      const tabId = this.getAttribute('data-tab');
+      const target = document.getElementById(tabId);
+      if (target) target.style.display = 'block';
+
+      if (tabId === 'tab-clientes') renderizarClientes();
+    });
+  });
+
+  function obtenerNombreCliente(s) {
+    if (!s) return 'Usuario';
+    if (s.cliente_nombre && s.cliente_nombre.trim() !== '' && s.cliente_nombre !== 'Usuario') return s.cliente_nombre;
+    if (s.nombre_cliente && s.nombre_cliente.trim() !== '') return s.nombre_cliente;
+
+    if (s.cliente) {
+      if (typeof s.cliente === 'object') {
+        const nom = s.cliente.first_name || s.cliente.nombres || s.cliente.nombre || '';
+        const ape = s.cliente.last_name || s.cliente.apellidos || '';
+        const completo = (nom + ' ' + ape).trim();
+        if (completo) return completo;
+        if (s.cliente.username) return s.cliente.username;
+        if (s.cliente.email) return s.cliente.email.split('@')[0];
+      } else if (typeof s.cliente === 'string' && s.cliente.trim() !== '' && isNaN(s.cliente)) {
+        return s.cliente;
+      }
+    }
+    if (s.usuario_nombre) return s.usuario_nombre;
+    return 'Usuario';
+  }
+
+  function obtenerNombreServicio(s) {
+    if (!s) return 'Servicio a domicilio';
+    if (s.nombre_servicio_copia) return s.nombre_servicio_copia;
+    if (s.servicio_nombre) return s.servicio_nombre;
+    if (s.nombre_servicio) return s.nombre_servicio;
+    if (s.servicio) {
+      if (typeof s.servicio === 'object') {
+        if (s.servicio.nombre) return s.servicio.nombre;
+        if (s.servicio.titulo) return s.servicio.titulo;
+      } else if (typeof s.servicio === 'string' && isNaN(s.servicio)) {
+        return s.servicio;
+      } else if (mapaServicios[s.servicio]) {
+        return mapaServicios[s.servicio];
+      }
+    }
+    return 'Servicio de Bienestar';
+  }
+
+  function obtenerTelefonoCliente(s) {
+    if (!s) return '';
+    if (s.cliente_telefono) return s.cliente_telefono;
+    if (s.telefono_cliente) return s.telefono_cliente;
+    if (s.cliente && typeof s.cliente === 'object' && s.cliente.telefono) {
+      return s.cliente.telefono;
+    }
+    return '';
+  }
+
+  function obtenerFecha(s) {
+    const rawFecha = s.fecha_solicitada || s.fecha_preferida || s.fecha_servicio || s.fecha;
+    if (!rawFecha) return 'Fecha por confirmar';
+    try {
+      const d = new Date(rawFecha + (rawFecha.includes('T') ? '' : 'T00:00:00'));
+      if (isNaN(d.getTime())) return rawFecha;
+      return d.toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch(e) {
+      return rawFecha;
+    }
+  }
+
+  function obtenerHora(s) {
+    const rawHora = s.hora_solicitada || s.hora_preferida || s.hora;
+    if (!rawHora) return '08:00 AM';
+    if (rawHora.includes('08:00')) return '08:00 AM';
+    if (rawHora.includes('09:00')) return '09:00 AM';
+    if (rawHora.includes('10:00')) return '10:00 AM';
+    if (rawHora.includes('11:00')) return '11:00 AM';
+    if (rawHora.includes('12:00')) return '12:00 PM';
+    if (rawHora.includes('13:00') || rawHora.includes('01:00')) return '01:00 PM';
+    if (rawHora.includes('14:00') || rawHora.includes('02:00')) return '02:00 PM';
+    if (rawHora.includes('15:00') || rawHora.includes('03:00')) return '03:00 PM';
+    if (rawHora.includes('16:00') || rawHora.includes('04:00')) return '04:00 PM';
+    if (rawHora.includes('17:00') || rawHora.includes('05:00')) return '05:00 PM';
+    return rawHora;
+  }
+
+  // Función auxiliar para calcular la hora de finalización (E2)
+  function calcularHoraFin(horaInicioStr, duracionMinutos) {
+    if (!horaInicioStr) return '';
+    try {
+      let partes = horaInicioStr.split(':');
+      let h = parseInt(partes[0], 10);
+      let m = parseInt(partes[1] || '0', 10);
+      
+      if (horaInicioStr.toUpperCase().includes('PM') && h < 12) h += 12;
+      if (horaInicioStr.toUpperCase().includes('AM') && h === 12) h = 0;
+
+      let totalMinutos = (h * 60) + m + (duracionMinutos || 60);
+      let nuevoH = Math.floor(totalMinutos / 60) % 24;
+      let nuevoM = totalMinutos % 60;
+
+      let ampm = nuevoH >= 12 ? 'PM' : 'AM';
+      let h12 = nuevoH % 12;
+      if (h12 === 0) h12 = 12;
+      let hFormat = h12 < 10 ? '0' + h12 : h12;
+      let mFormat = nuevoM < 10 ? '0' + nuevoM : nuevoM;
+
+      return hFormat + ':' + mFormat + ' ' + ampm;
+    } catch(e) {
+      return '';
+    }
+  }
+
+  function cargarCatalogoServicios() {
+    window.BEC.api(window.BEC.cfg.api.servicios, { method: 'GET' })
+      .then(function(res) {
+        if (res.ok) {
+          window.BEC.lista(res.data).forEach(function(s) {
+            mapaServicios[s.id] = s.nombre || s.titulo || 'Servicio';
+          });
+        }
+        cargarDatosProveedor();
+      })
+      .catch(function() {
+        cargarDatosProveedor();
+      });
+  }
+
+  function cargarDatosProveedor() {
+    window.BEC.api(window.BEC.cfg.api.solicitudes, { method: 'GET' })
+      .then(function(res) {
+        if (!res.ok) {
+          console.error('Error al cargar solicitudes:', res.status, res.data);
+          renderizarSeccionesSolicitudes([]);
+          return;
+        }
+
+        todasLasSolicitudes = window.BEC.lista(res.data);
+
+        const pendientes = todasLasSolicitudes.filter(s => (s.estado || '').toUpperCase() === 'PENDIENTE');
+        const clientes = todasLasSolicitudes.filter(s => ['ACEPTADA', 'ACEPTADO', 'REALIZADO', 'COMPLETADO'].includes((s.estado || '').toUpperCase()));
+
+        document.getElementById('stat-pendientes').innerText = pendientes.length;
+        document.getElementById('stat-clientes').innerText = clientes.length;
+        document.getElementById('badge-count-pendientes').innerText = pendientes.length;
+
+        renderizarSeccionesSolicitudes(todasLasSolicitudes);
+      })
+      .catch(function(err) {
+        console.error("Error al cargar solicitudes:", err);
+      });
+  }
+
+  function renderizarSeccionesSolicitudes(lista) {
+    const contenedorPorResponder = document.getElementById('contenedorPorResponder');
+    const contenedorRespondidas = document.getElementById('contenedorRespondidas');
+
+    const pendientes = lista.filter(s => (s.estado || '').toUpperCase() === 'PENDIENTE');
+    
+    // Respondidas ordenadas cronológicamente por fecha y hora de atención
+    const respondidas = lista
+      .filter(s => (s.estado || '').toUpperCase() !== 'PENDIENTE')
+      .sort((a, b) => {
+        const fechaA = `${a.fecha_solicitada || ''}T${a.hora_solicitada || '00:00:00'}`;
+        const fechaB = `${b.fecha_solicitada || ''}T${b.hora_solicitada || '00:00:00'}`;
+        return fechaA.localeCompare(fechaB);
+      });
+
+    if (pendientes.length === 0) {
+      contenedorPorResponder.innerHTML = `
+        <div style="background-color: #ffffff; border-radius: 1.25rem; border: 1px solid #fef3c7; padding: 2rem; text-align: center; color: #64748b;">
+          No tienes solicitudes pendientes por responder.
+        </div>`;
+    } else {
+      contenedorPorResponder.innerHTML = pendientes.map(sol => {
+        const cliente = obtenerNombreCliente(sol);
+        const servicio = obtenerNombreServicio(sol);
+        const fecha = obtenerFecha(sol);
+        const hora = obtenerHora(sol);
+
+        const rawNota = (sol.informacion_complementaria || sol.observaciones || sol.notas_adicionales || sol.descripcion || '').trim();
+        const mostrarNota = rawNota !== '' && rawNota.toLowerCase() !== 'dirección del perfil' && rawNota.toLowerCase() !== 'direccion del perfil';
+
+        return `
+          <div style="background-color: #ffffff; border-radius: 1.25rem; border: 1px solid #fef3c7; padding: 1.5rem; position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+
+            <div style="position: absolute; top: 1.5rem; right: 1.5rem;">
+              <span style="background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-size: 0.8rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 9999px; display: inline-flex; align-items: center; gap: 0.35rem;">
+                <svg style="width: 0.85rem; height: 0.85rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Pendiente
+              </span>
+            </div>
+
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0 0 0.25rem 0; padding-right: 7rem;">${SolUI.esc(cliente)}</h3>
+            <p style="color: #0d9488; font-size: 0.95rem; font-weight: 600; margin: 0 0 0.85rem 0;">${SolUI.esc(servicio)}</p>
+
+            <div style="display: flex; gap: 1.25rem; align-items: center; color: #64748b; font-size: 0.85rem; margin-bottom: ${mostrarNota ? '1rem' : '1.25rem'}; flex-wrap: wrap;">
+              <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                <svg style="width: 1rem; height: 1rem; color: #94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                ${fecha}
+              </span>
+              <span style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                <svg style="width: 1rem; height: 1rem; color: #94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                ${hora}
+              </span>
+            </div>
+
+            ${SolUI.bloqueDireccion(sol) ? `<div style="margin-bottom: 1rem;">${SolUI.bloqueDireccion(sol)}</div>` : ''}
+
+            ${mostrarNota ? `
+              <div style="background-color: #f8fafc; border-radius: 0.75rem; padding: 0.85rem 1rem; color: #475569; font-size: 0.9rem; font-style: italic; margin-bottom: 1.25rem;">
+                "${SolUI.esc(rawNota)}"
+              </div>
+            ` : ''}
+
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+              <button onclick="aceptarSolicitud(${sol.id}, this)" style="background-color: #0d9488; color: #ffffff; border: none; padding: 0.65rem 1.25rem; border-radius: 0.65rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.9rem;">
+                <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Aceptar
+              </button>
+
+              <button onclick="contraproponer(${sol.id})" style="background-color: #ffffff; color: #2563eb; border: 1px solid #93c5fd; padding: 0.65rem 1.25rem; border-radius: 0.65rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.9rem;">
+                <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Contraproponer horario
+              </button>
+
+              <button onclick="rechazarSolicitud(${sol.id})" style="background-color: #ffffff; color: #ef4444; border: 1px solid #fca5a5; padding: 0.65rem 1.25rem; border-radius: 0.65rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.9rem;">
+                <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                Rechazar
+              </button>
+
+              <a href="${SolUI.urlDetalle(sol.id)}" class="sol-btn sol-btn-detalle">
+                <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                Ver detalle
+              </a>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    if (respondidas.length === 0) {
+      contenedorRespondidas.innerHTML = `
+        <div style="background-color: #ffffff; border-radius: 1.25rem; border: 1px solid #e2e8f0; padding: 2rem; text-align: center; color: #64748b;">
+          No tienes solicitudes respondidas aún.
+        </div>`;
+    } else {
+      contenedorRespondidas.innerHTML = respondidas.map(sol => {
+        const cliente = obtenerNombreCliente(sol);
+        const servicio = obtenerNombreServicio(sol);
+        const fecha = obtenerFecha(sol);
+        const horaInicio = obtenerHora(sol);
+        const duracion = sol.duracion_minutos_copia || 60;
+        const horaFin = calcularHoraFin(sol.hora_solicitada || horaInicio, duracion);
+        
+
+        return `
+          <div style="background-color: #ffffff; border-radius: 1.25rem; border: 1px solid #e2e8f0; padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <div>
+              <h3 style="font-size: 1.1rem; font-weight: 800; color: #0f172a; margin: 0 0 0.2rem 0;">${SolUI.esc(cliente)}</h3>
+              <p style="color: #64748b; font-size: 0.9rem; margin: 0 0 0.4rem 0;">${SolUI.esc(servicio)}</p>
+              
+              <!-- E2 y E3: Horarios completos y Dirección -->
+              <div style="display: flex; gap: 1rem; color: #64748b; font-size: 0.85rem; flex-wrap: wrap; margin-bottom: 0.3rem;">
+                <span>📅 <strong>${fecha}</strong></span>
+                <span>🕒 ${horaInicio} - ${horaFin}</span>
+              </div>
+              ${SolUI.bloqueDireccion(sol)}
+            </div>
+
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.6rem;">
+              ${SolUI.estadoConMotivo(sol)}
+              <a href="${SolUI.urlDetalle(sol.id)}" class="sol-btn sol-btn-detalle">
+                <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                Ver detalle
+              </a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  function renderizarClientes() {
+    const contenedor = document.getElementById('contenedorClientes');
+    if (!contenedor) return;
+
+    // Clientes/Citas aceptadas ordenadas cronológicamente
+    const aceptadas = todasLasSolicitudes
+      .filter(s => ['ACEPTADA', 'ACEPTADO', 'REALIZADO', 'COMPLETADO'].includes((s.estado || '').toUpperCase()))
+      .sort((a, b) => {
+        const fechaA = `${a.fecha_solicitada || ''}T${a.hora_solicitada || '00:00:00'}`;
+        const fechaB = `${b.fecha_solicitada || ''}T${b.hora_solicitada || '00:00:00'}`;
+        return fechaA.localeCompare(fechaB);
+      });
+
+    if (aceptadas.length === 0) {
+      contenedor.innerHTML = `
+        <div style="background-color: #ffffff; border-radius: 1.25rem; border: 1px solid #e2e8f0; padding: 3rem; text-align: center; color: #64748b;">
+          Aún no tienes clientes o citas confirmadas.
+        </div>`;
+      return;
+    }
+
+    contenedor.innerHTML = aceptadas.map(sol => {
+      const cliente = obtenerNombreCliente(sol);
+      const servicio = obtenerNombreServicio(sol);
+      const fecha = obtenerFecha(sol);
+      const horaInicio = obtenerHora(sol);
+      const duracion = sol.duracion_minutos_copia || 60;
+      const horaFin = calcularHoraFin(sol.hora_solicitada || horaInicio, duracion);
+      const telefono = obtenerTelefonoCliente(sol);
+      
+
+      return `
+        <div style="background-color: #ffffff; border-radius: 1.25rem; border: 1px solid #e2e8f0; padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+          <div>
+            <h4 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0 0 0.2rem 0;">${SolUI.esc(cliente)}</h4>
+            <p style="color: #64748b; font-size: 0.85rem; margin: 0 0 0.3rem 0;">${SolUI.esc(servicio)}</p>
+            <p style="color: #64748b; font-size: 0.8rem; margin: 0 0 0.2rem 0;">📅 ${fecha} (${horaInicio} - ${horaFin})${telefono ? ' • 📞 ' + SolUI.esc(telefono) : ''}</p>
+            ${SolUI.bloqueDireccion(sol)}
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.6rem;">
+            ${SolUI.badge(sol.estado)}
+            <a href="${SolUI.urlDetalle(sol.id)}" class="sol-btn sol-btn-detalle">Ver detalle</a>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  const NOMBRES_DIA = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+
+  function csrf() {
+    var csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    return csrfInput ? csrfInput.value : '';
+  }
+
+  async function apiJson(url, opts) {
+    const res = await fetch(url, Object.assign({credentials:'same-origin', headers:{'X-CSRFToken': csrf()}}, opts || {}));
+    const data = res.status === 204 ? null : await res.json().catch(() => null);
+    if (!res.ok) throw data || new Error('error');
+    return data;
+  }
+
+  async function cargarHorarioPanel() {
+    const resumen = document.getElementById('resumenHorarioReal');
+    try {
+      const data = await apiJson('/api/proveedores/disponibilidad/');
+      disponibilidadProveedor = Array.isArray(data) ? data : (data.results || []);
+      
+      if (!disponibilidadProveedor.length) {
+        resumen.textContent = 'Aún no hay horario guardado.';
+      } else {
+        resumen.innerHTML = disponibilidadProveedor.map(h => '<div><strong>' + NOMBRES_DIA[Number(h.dia_semana)] + ':</strong> ' + String(h.hora_inicio).slice(0,5) + ' – ' + String(h.hora_fin).slice(0,5) + '</div>').join('');
+      }
+    } catch (e) {
+      if (resumen) resumen.textContent = 'No se pudo leer la disponibilidad. Inicia sesión como proveedor.';
+    }
+  }
+
+  cargarHorarioPanel();
+
+  // Aceptar y rechazar usan las acciones de la API; rechazar pide el motivo en un modal
+  window.aceptarSolicitud = function(id, boton) {
+    if (boton) boton.disabled = true;
+    SolUI.aceptar(id).then(function(res) {
+      if (!res.ok) { alert(SolUI.errorDe(res)); if (boton) boton.disabled = false; return; }
+      cargarDatosProveedor();
+    }).catch(function() {
+      alert('Error de conexión al actualizar la solicitud.');
+      if (boton) boton.disabled = false;
+    });
+  };
+
+  window.rechazarSolicitud = function(id) {
+    SolUI.rechazar(id).then(function(actualizada) {
+      if (actualizada) cargarDatosProveedor();
+    });
+  };
+
+  var modalContraproponer = document.getElementById('modalContraproponer');
+  var btnCancelarContrapropuesta = document.getElementById('btnCancelarContrapropuesta');
+  var btnConfirmarContrapropuesta = document.getElementById('btnConfirmarContrapropuesta');
+  var solicitudIdContrapropuesta = null;
+  var selectFranja = document.getElementById('selectFranjaHoraria');
+
+  function formatearHoraLectura(h24Str) {
+    var partes = h24Str.split(':');
+    var h = parseInt(partes[0], 10);
+    var m = partes[1] || '00';
+    var ampm = h >= 12 ? 'PM' : 'AM';
+    var h12 = h % 12;
+    if (h12 === 0) h12 = 12;
+    var hFormat = h12 < 10 ? '0' + h12 : h12;
+    return hFormat + ':' + m + ' ' + ampm;
+  }
+
+  window.contraproponer = function(id) {
+    if (!id) return;
+    solicitudIdContrapropuesta = id;
+    
+    var sol = todasLasSolicitudes.find(s => s.id === id);
+    var rawFecha = sol ? (sol.fecha_solicitada || sol.fecha_preferida || sol.fecha_servicio || sol.fecha) : null;
+    
+    selectFranja.innerHTML = '<option value="">-- Selecciona una hora disponible --</option>';
+
+    if (rawFecha) {
+      var d = new Date(rawFecha + (rawFecha.includes('T') ? '' : 'T00:00:00'));
+      var diaJS = d.getDay(); // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
+      var mapaDiaBackend = (diaJS === 0) ? 6 : (diaJS - 1); // 0 = Lunes, ..., 6 = Domingo
+
+      var horarioDia = disponibilidadProveedor.find(h => Number(h.dia_semana) === mapaDiaBackend);
+
+      if (horarioDia) {
+        var iniH = parseInt(horarioDia.hora_inicio.split(':')[0], 10);
+        var finH = parseInt(horarioDia.hora_fin.split(':')[0], 10);
+
+        for (var h = iniH; h < finH; h++) {
+          var h24 = (h < 10 ? '0' + h : h) + ':00:00';
+          var opt = document.createElement('option');
+          opt.value = h24; // Formato 24h para backend
+          opt.textContent = formatearHoraLectura(h24); // Formato legible (AM/PM)
+          selectFranja.appendChild(opt);
+        }
+      }
+    }
+
+    // Si no hay horario cargado, ofrece las franjas base (08:00 a 17:00)
+    if (selectFranja.options.length <= 1) {
+      for (var h = 8; h <= 17; h++) {
+        var h24 = (h < 10 ? '0' + h : h) + ':00:00';
+        var opt = document.createElement('option');
+        opt.value = h24;
+        opt.textContent = formatearHoraLectura(h24);
+        selectFranja.appendChild(opt);
+      }
+    }
+
+    modalContraproponer.style.display = 'flex';
+  };
+
+  if (btnCancelarContrapropuesta) {
+    btnCancelarContrapropuesta.addEventListener('click', function() {
+      modalContraproponer.style.display = 'none';
+      solicitudIdContrapropuesta = null;
+    });
+  }
+
+  if (btnConfirmarContrapropuesta) {
+    btnConfirmarContrapropuesta.addEventListener('click', function() {
+      if (!solicitudIdContrapropuesta) return;
+
+      var horaValor24h = selectFranja.value;
+      if (!horaValor24h) {
+        alert('Por favor selecciona una hora propuesta de la lista.');
+        return;
+      }
+
+      var textoOriginal = btnConfirmarContrapropuesta.textContent;
+      btnConfirmarContrapropuesta.textContent = 'Enviando...';
+      btnConfirmarContrapropuesta.disabled = true;
+
+      window.BEC.api(window.BEC.url(window.BEC.cfg.api.solicitud, solicitudIdContrapropuesta), {
+        method: 'PATCH',
+        body: { 
+          hora_solicitada: horaValor24h, 
+          observaciones: "Cambio de hora solicitado por el proveedor" 
+        }
+      }).then(function(res) {
+        if (!res.ok) {
+          // Ej.: la hora propuesta ya está ocupada por otra reserva del proveedor
+          alert('No se pudo proponer la nueva hora: ' + SolUI.errorDe(res));
+          return;
+        }
+        modalContraproponer.style.display = 'none';
+        if (typeof cargarDatosProveedor === 'function') {
+          cargarDatosProveedor();
+        }
+      }).catch(function() {
+        alert('Error de conexión al proponer la nueva hora.');
+      }).finally(function() {
+        btnConfirmarContrapropuesta.textContent = textoOriginal;
+        btnConfirmarContrapropuesta.disabled = false;
+        solicitudIdContrapropuesta = null;
+      });
+    });
+  }
+  cargarCatalogoServicios();
+});
+</script>
+
+<!-- Modal Contraproponer Horario -->
+<div id="modalContraproponer" style="display: none; position: fixed; inset: 0; background-color: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: 1rem;">
+  <div style="background-color: #ffffff; border-radius: 1.25rem; max-width: 24rem; width: 100%; padding: 1.75rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); text-align: center; border: 1px solid #e2e8f0;">
+    
+    <div style="width: 3rem; height: 3rem; background-color: #eff6ff; color: #3b82f6; border-radius: 9999px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto;">
+      <svg style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+    </div>
+
+    <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0 0 0.5rem 0;">Proponer nuevo horario</h3>
+    <p style="color: #64748b; font-size: 0.875rem; margin: 0 0 1.25rem 0; line-height: 1.4;">
+      Selecciona una de tus horas de atención disponibles para este día:
+    </p>
+
+    <!-- Selector dinámico de franjas horarias -->
+    <div style="margin-bottom: 1.5rem;">
+      <select id="selectFranjaHoraria" style="width: 100%; padding: 0.75rem; border-radius: 0.75rem; border: 1px solid #cbd5e1; background-color: #f8fafc; font-size: 0.95rem; font-weight: 600; color: #0f172a; outline: none; cursor: pointer;">
+        <option value="">-- Selecciona una hora disponible --</option>
+      </select>
+    </div>
+
+    <div style="display: flex; gap: 0.75rem;">
+      <button type="button" id="btnCancelarContrapropuesta" style="flex: 1; background-color: #f1f5f9; color: #475569; font-weight: 700; padding: 0.7rem; border-radius: 0.75rem; border: none; font-size: 0.875rem; cursor: pointer; transition: background-color 0.2s ease;">
+        Cancelar
+      </button>
+      <button type="button" id="btnConfirmarContrapropuesta" style="flex: 1; background-color: #2563eb; color: #ffffff; font-weight: 700; padding: 0.7rem; border-radius: 0.75rem; border: none; font-size: 0.875rem; cursor: pointer; transition: background-color 0.2s ease;">
+        Confirmar
+      </button>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,212 @@
+<!--
+  Utilidades compartidas para las páginas de solicitudes:
+  - Badge de estado con colores.
+  - "Burbuja" con el motivo de rechazo/cancelación (encima del estado).
+  - Modal para escribir el motivo (obligatorio) al rechazar o cancelar.
+  - Llamadas a la API: aceptar / rechazar / cancelar.
+  - Bloque de dirección (lugar de atención + dirección principal del cliente).
+  Se incluye dentro del bloque body de cada página y expone window.SolUI.
+  Las llamadas usan BEC.api (definido en base.html) en el momento de ejecutarse.
+-->
+<style>
+  .sol-estado-wrap { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 0.45rem; }
+  .sol-badge { font-size: 0.8rem; font-weight: 700; padding: 0.35rem 0.85rem; border-radius: 9999px; white-space: nowrap; border: 1px solid transparent; }
+  .sol-burbuja { position: relative; max-width: 18rem; background: #fee2e2; color: #991b1b; border-radius: 0.75rem; padding: 0.5rem 0.8rem; font-size: 0.82rem; font-weight: 600; line-height: 1.35; text-align: left; box-shadow: 0 2px 6px rgba(153, 27, 27, 0.08); }
+  .sol-burbuja::after { content: ''; position: absolute; bottom: -6px; right: 1.1rem; border-width: 6px 6px 0 6px; border-style: solid; border-color: #fee2e2 transparent transparent transparent; }
+  .sol-burbuja strong { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.1rem; }
+  /* Mismo formato que la dirección en "Mis clientes" del panel del proveedor */
+  .sol-dir { color: #475569; font-size: 0.85rem; line-height: 1.5; }
+  .sol-dir-fila { display: flex; gap: 0.3rem; align-items: flex-start; }
+  .sol-dir-fila + .sol-dir-fila { margin-top: 0.2rem; }
+  .sol-tag-principal { background: #dbeafe; color: #1d4ed8; font-size: 0.7rem; font-weight: 800; padding: 0.1rem 0.45rem; border-radius: 9999px; margin-left: 0.25rem; vertical-align: middle; }
+  .sol-btn { border-radius: 0.65rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; padding: 0.6rem 1.15rem; text-decoration: none; border: 1px solid transparent; line-height: 1.2; }
+  .sol-btn:disabled { opacity: 0.6; cursor: wait; }
+  .sol-btn-primario { background: #0d9488; color: #fff; }
+  .sol-btn-detalle { background: #fff; color: #0f172a; border-color: #cbd5e1; }
+  .sol-btn-azul { background: #fff; color: #2563eb; border-color: #93c5fd; }
+  .sol-btn-peligro { background: #fff; color: #ef4444; border-color: #fca5a5; }
+  .sol-modal-fondo { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
+  .sol-modal-fondo.abierto { display: flex; }
+  .sol-modal { background: #fff; border-radius: 1.25rem; width: 100%; max-width: 28rem; padding: 1.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.15); font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+  .sol-modal h3 { margin: 0 0 0.35rem 0; font-size: 1.2rem; font-weight: 800; color: #0f172a; }
+  .sol-modal p { margin: 0 0 1rem 0; color: #64748b; font-size: 0.9rem; }
+  .sol-modal textarea { width: 100%; box-sizing: border-box; min-height: 6rem; padding: 0.75rem; border-radius: 0.75rem; border: 1px solid #cbd5e1; font: inherit; font-size: 0.95rem; resize: vertical; }
+  .sol-modal textarea:focus { outline: 2px solid #99f6e4; border-color: #0d9488; }
+  .sol-modal-error { color: #dc2626; font-size: 0.85rem; font-weight: 600; min-height: 1.2rem; margin-top: 0.35rem; }
+  .sol-modal-acciones { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 0.75rem; }
+</style>
+
+<div id="solModalMotivo" class="sol-modal-fondo" role="dialog" aria-modal="true" aria-labelledby="solModalTitulo" aria-hidden="true">
+  <form class="sol-modal" id="solModalForm" novalidate>
+    <h3 id="solModalTitulo">Motivo</h3>
+    <p id="solModalTexto">Escribe el motivo. La otra parte podrá verlo.</p>
+    <label for="solModalInput" style="display:block;font-weight:700;font-size:0.85rem;color:#334155;margin-bottom:0.35rem;">Motivo <span style="color:#dc2626;">*</span></label>
+    <textarea id="solModalInput" maxlength="500" placeholder="Ej: No tengo disponibilidad en ese horario."></textarea>
+    <div class="sol-modal-error" id="solModalError" role="alert"></div>
+    <div class="sol-modal-acciones">
+      <button type="button" class="sol-btn sol-btn-detalle" id="solModalCancelar">Volver</button>
+      <button type="submit" class="sol-btn sol-btn-primario" id="solModalConfirmar" style="background:#ef4444;">Confirmar</button>
+    </div>
+  </form>
+</div>
+
+<script>
+(function () {
+  var ETIQUETAS = {
+    PENDIENTE: 'Pendiente', SUGERIDA: 'Horario sugerido', ACEPTADA: 'Aceptada',
+    COMPLETADA: 'Completada', CANCELADA: 'Cancelada', RECHAZADA: 'Rechazada'
+  };
+  var COLORES = {
+    PENDIENTE: ['#fffbeb', '#b45309', '#fde68a'], SUGERIDA: ['#e0e7ff', '#3730a3', '#c7d2fe'],
+    ACEPTADA: ['#f0fdf4', '#166534', '#bbf7d0'], COMPLETADA: ['#ccfbf1', '#115e59', '#99f6e4'],
+    CANCELADA: ['#fef2f2', '#991b1b', '#fecaca'], RECHAZADA: ['#fef2f2', '#991b1b', '#fecaca']
+  };
+  var FINALES = ['COMPLETADA', 'CANCELADA', 'RECHAZADA'];
+  var POR_RESPONDER = ['PENDIENTE', 'SUGERIDA'];
+
+  function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function estadoDe(s) { return String((s && s.estado) || 'PENDIENTE').toUpperCase(); }
+
+  function badge(estado) {
+    var e = String(estado || 'PENDIENTE').toUpperCase();
+    var c = COLORES[e] || COLORES.PENDIENTE;
+    return '<span class="sol-badge" style="background:' + c[0] + ';color:' + c[1] + ';border-color:' + c[2] + ';">' + esc(ETIQUETAS[e] || e) + '</span>';
+  }
+
+  function burbuja(s) {
+    var e = estadoDe(s);
+    if (!s || !s.motivo_rechazo_cancelacion || (e !== 'CANCELADA' && e !== 'RECHAZADA')) return '';
+    var titulo = e === 'RECHAZADA' ? 'Motivo del rechazo' : 'Motivo de la cancelación';
+    return '<div class="sol-burbuja" role="note"><strong>' + titulo + '</strong>' + esc(s.motivo_rechazo_cancelacion) + '</div>';
+  }
+
+  // Burbuja (si hay motivo) encima del badge de estado
+  function estadoConMotivo(s) {
+    return '<div class="sol-estado-wrap">' + burbuja(s) + badge(estadoDe(s)) + '</div>';
+  }
+
+  // E3: la dirección se muestra sin la palabra "(Principal)" que a veces trae el texto
+  function limpiarDireccion(texto) { return String(texto || '').replace(/\(Principal\)/gi, '').trim(); }
+
+  // Dirección de atención de la solicitud + dirección principal del perfil del cliente
+  function bloqueDireccion(s, opciones) {
+    opciones = opciones || {};
+    if (!s) return '';
+    var filas = [];
+    var atencion = limpiarDireccion(s.direccion_atencion);
+    var p = s.cliente_direccion_principal;
+    var mostrarPrincipal = opciones.principal !== false && p && p.direccion;
+    var esLaPrincipal = mostrarPrincipal && atencion.toLowerCase() === limpiarDireccion(p.direccion).toLowerCase();
+    if (atencion) {
+      filas.push('<div class="sol-dir-fila"><span aria-hidden="true">📍</span><div><strong>Dirección:</strong> ' +
+        esc(atencion) + (s.barrio_sector ? ' (' + esc(s.barrio_sector) + ')' : '') +
+        (esLaPrincipal ? '<span class="sol-tag-principal">Principal</span>' : '') + '</div></div>');
+    }
+    if (mostrarPrincipal && !esLaPrincipal) {
+      filas.push('<div class="sol-dir-fila"><span aria-hidden="true">🏠</span><div><strong>Dirección del perfil:</strong> ' +
+        esc(limpiarDireccion(p.direccion)) + (p.barrio ? ' (' + esc(p.barrio) + ')' : '') + (p.ciudad ? ' - ' + esc(p.ciudad) : '') +
+        '<span class="sol-tag-principal">Principal</span></div></div>');
+    }
+    return filas.length ? '<div class="sol-dir">' + filas.join('') + '</div>' : '';
+  }
+
+  function urlDetalle(id) { return '/mis-solicitudes/' + encodeURIComponent(id) + '/'; }
+
+  function errorDe(res) {
+    var d = res && res.data;
+    if (!d) return 'No se pudo completar la operación.';
+    if (typeof d === 'string') return d;
+    if (d.detail) return d.detail;
+    var k = Object.keys(d)[0];
+    var v = k ? d[k] : null;
+    return Array.isArray(v) ? v[0] : (typeof v === 'string' ? v : 'No se pudo completar la operación.');
+  }
+
+  function llamar(id, accion, cuerpo) {
+    return window.BEC.api('/api/solicitudes/' + encodeURIComponent(id) + '/' + accion + '/', {
+      method: 'POST', body: cuerpo || {}
+    });
+  }
+
+  // ---- Modal de motivo ----
+  var modal, form, input, errorBox, titulo, texto, btnConfirmar, resolver = null, enviar = null;
+
+  function cerrarModal() {
+    modal.classList.remove('abierto');
+    modal.setAttribute('aria-hidden', 'true');
+    if (resolver) { resolver(null); resolver = null; }
+    enviar = null;
+  }
+
+  function iniciarModal() {
+    modal = document.getElementById('solModalMotivo');
+    if (!modal || modal.dataset.listo) return;
+    modal.dataset.listo = '1';
+    form = document.getElementById('solModalForm');
+    input = document.getElementById('solModalInput');
+    errorBox = document.getElementById('solModalError');
+    titulo = document.getElementById('solModalTitulo');
+    texto = document.getElementById('solModalTexto');
+    btnConfirmar = document.getElementById('solModalConfirmar');
+    document.getElementById('solModalCancelar').addEventListener('click', cerrarModal);
+    modal.addEventListener('click', function (e) { if (e.target === modal) cerrarModal(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && modal.classList.contains('abierto')) cerrarModal(); });
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var motivo = input.value.trim();
+      if (!motivo) { errorBox.textContent = 'El motivo es obligatorio.'; input.focus(); return; }
+      if (!enviar) return;
+      btnConfirmar.disabled = true;
+      errorBox.textContent = '';
+      enviar(motivo).then(function (res) {
+        btnConfirmar.disabled = false;
+        if (!res.ok) { errorBox.textContent = errorDe(res); return; }
+        var r = resolver; resolver = null; enviar = null;
+        modal.classList.remove('abierto');
+        modal.setAttribute('aria-hidden', 'true');
+        if (r) r(res.data);
+      }).catch(function () {
+        btnConfirmar.disabled = false;
+        errorBox.textContent = 'No se pudo conectar con el servidor.';
+      });
+    });
+  }
+
+  // Abre el modal; resuelve con la solicitud actualizada o null si se cierra
+  function pedirMotivoYEnviar(id, accion) {
+    iniciarModal();
+    var esRechazo = accion === 'rechazar';
+    titulo.textContent = esRechazo ? 'Rechazar solicitud' : 'Cancelar solicitud';
+    texto.textContent = esRechazo
+      ? 'Cuéntale al cliente por qué rechazas esta solicitud.'
+      : 'Escribe por qué cancelas esta solicitud. La otra parte podrá verlo.';
+    btnConfirmar.textContent = esRechazo ? 'Rechazar' : 'Cancelar solicitud';
+    input.value = '';
+    errorBox.textContent = '';
+    btnConfirmar.disabled = false;
+    modal.classList.add('abierto');
+    modal.setAttribute('aria-hidden', 'false');
+    setTimeout(function () { input.focus(); }, 30);
+    return new Promise(function (resolve) {
+      resolver = resolve;
+      enviar = function (motivo) { return llamar(id, accion, { motivo: motivo }); };
+    });
+  }
+
+  window.SolUI = {
+    ETIQUETAS: ETIQUETAS, FINALES: FINALES, POR_RESPONDER: POR_RESPONDER,
+    esc: esc, estadoDe: estadoDe, badge: badge, burbuja: burbuja, estadoConMotivo: estadoConMotivo,
+    bloqueDireccion: bloqueDireccion, urlDetalle: urlDetalle, errorDe: errorDe,
+    puedeResponder: function (s) { return POR_RESPONDER.indexOf(estadoDe(s)) !== -1; },
+    puedeCancelar: function (s) { return FINALES.indexOf(estadoDe(s)) === -1; },
+    aceptar: function (id) { return llamar(id, 'aceptar'); },
+    rechazar: function (id) { return pedirMotivoYEnviar(id, 'rechazar'); },
+    cancelar: function (id) { return pedirMotivoYEnviar(id, 'cancelar'); }
+  };
+})();
+</script>

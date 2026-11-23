@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block title %}Detalle de la Solicitud - BienestarEnCasa{% endblock %}
+
+{% block body %}
+{% include 'includes/solicitudes-ui.html' %}
+<style>
+    .solicitud-wrap {
+        background: #fff;
+        padding: 32px;
+        border-radius: 16px;
+    }
+
+    .solicitud-wrap h1 {
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 24px;
+    }
+
+    .solicitud-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        align-items: start;
+    }
+
+    @media (max-width: 720px) {
+        .solicitud-grid { grid-template-columns: 1fr; }
+    }
+
+    .tarjeta {
+        background: #fff;
+        border-radius: 14px;
+        padding: 22px 24px;
+        border: 1px solid #e0e0e0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        margin-bottom: 20px;
+    }
+
+    .tarjeta h2 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin: 0 0 14px;
+    }
+
+    .tarjeta .fila {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 14px;
+    }
+
+    .tarjeta p {
+        margin: 0 0 14px;
+    }
+
+    .tarjeta p strong {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 2px;
+    }
+
+    .meta-creacion {
+        color: #666;
+        margin-top: 8px;
+    }
+
+    .options-menu {
+        display: flex;
+        gap: 14px;
+        margin-top: 10px;
+    }
+
+    .btn {
+        display: inline-block;
+        background: #2563eb;
+        color: #fff;
+        font-weight: 700;
+        text-decoration: none;
+        padding: 14px 28px;
+        border-radius: 12px;
+        text-align: center;
+    }
+
+    .btn:hover {
+        background: #1d4ed8;
+        color: #fff;
+    }
+
+    .btn.secundario {
+        background: #fff;
+        color: #2d2d2d;
+        border: 1px solid #d8dbe3;
+    }
+
+    .btn.secundario:hover {
+        background: #f2f3f7;
+        color: #2d2d2d;
+    }
+    #d-estado {
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 999px;
+    }
+
+    .estado-pendiente {
+        background: #fff3cd;
+        color: #8a6400;
+    }
+
+    .estado-sugerida {
+        background: #ffe0c2;
+        color: #a4530a;
+    }
+
+    .estado-aceptada {
+        background: #d4edda;
+        color: #1e7e34;
+    }
+
+    .estado-completada {
+        background: #e2e3e5;
+        color: #41464b;
+    }
+
+    .estado-cancelada, .estado-rechazada {
+        background: #f8d7da;
+        color: #a71d2a;
+    }
+
+    .titulo-fila {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+    }
+
+    .titulo-fila h1 { margin-bottom: 0; }
+
+    .options-menu { flex-wrap: wrap; align-items: center; }
+    /* .btn usa display:inline-block, que anulaba el atributo hidden */
+    .solicitud-wrap [hidden] { display: none !important; }
+    .options-menu .sol-btn { padding: 14px 24px; border-radius: 12px; }
+</style>
+
+<div class="container solicitud-wrap">
+    <div class="titulo-fila">
+        <h1 id="titulo">Detalle de la Solicitud</h1>
+        <!-- Estado con la burbuja del motivo (si fue rechazada o cancelada) -->
+        <div id="d-estado-burbuja"></div>
+    </div>
+
+    <!-- Mensajes de sistema -->
+    <div id="mensajes" aria-live="polite" style="font-weight: 600; margin-bottom: 16px;"></div>
+
+    <div id="detalle" class="solicitud-detalle" hidden>
+        <div class="solicitud-grid">
+            <!-- Columna izquierda: Servicio -->
+            <div class="tarjeta">
+                <h2>Información del Servicio</h2>
+                <p><span id="d-servicio"></span></p>
+                <div class="fila">
+                    <p><strong id="etq-persona">Proveedor:</strong> <span id="d-proveedor"></span></p>
+                    <p><strong>Precio acordado:</strong> <span id="d-precio"></span></p>
+                </div>
+                <p><strong>Duración:</strong> <span id="d-duracion"></span></p>
+            </div>
+
+            <!-- Columna derecha: Reserva y Lugar de atención -->
+            <div>
+                <div class="tarjeta">
+                    <h2>Reserva</h2>
+                    <p><strong>Estado:</strong> <span id="d-estado"></span></p>
+                    <div class="fila">
+                        <p><strong>Fecha:</strong> <span id="d-fecha"></span></p>
+                        <p><strong>Hora inicio:</strong> <span id="d-hora"></span></p>
+                        <p><strong>Hora fin:</strong> <span id="d-hora-fin"></span></p>
+                    </div>
+                </div>
+
+                <div class="tarjeta">
+                    <h2>Lugar de atención</h2>
+                    <div id="d-direccion" style="margin-bottom: 14px;"></div>
+                    <p id="p-complementaria" hidden><strong>Información complementaria:</strong> <span id="d-complementaria"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información adicional opcional, a lo ancho -->
+        <div class="tarjeta">
+            <p id="p-observaciones" hidden><strong>Observaciones:</strong> <span id="d-observaciones"></span></p>
+            <p class="meta-creacion"><small>Creada el <span id="d-creada"></span> · Última actualización: <span id="d-actualizada"></span></small></p>
+        </div>
+    </div>
+
+    <div class="options-menu">
+        <!-- Aceptar / Rechazar (proveedor) y Cancelar (cliente o proveedor), según el estado -->
+        <span id="acciones" style="display: contents;"></span>
+        <a href="#" id="ver-servicio" class="btn" hidden>Ver el Servicio</a>
+        <a href="{% url 'pagina-mis-solicitudes' %}" id="link-volver" class="btn secundario">Volver a Mis Solicitudes</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_body %}
+<script>
+(function () {
+    var ID = "{{ pk }}";
+
+    // Helpers de seguridad por si BEC no trae alguna función de formato
+    if (window.BEC) {
+        if (!window.BEC.fecha) {
+            window.BEC.fecha = function(raw) {
+                if (!raw) return '';
+                var d = new Date(raw + (raw.indexOf('T') === -1 ? 'T00:00:00' : ''));
+                return isNaN(d.getTime()) ? raw : d.toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' });
+            };
+        }
+        if (!window.BEC.hora) {
+            window.BEC.hora = function(raw) {
+                if (!raw) return '';
+                return raw.length > 5 ? raw.substring(0, 5) : raw;
+            };
+        }
+        if (!window.BEC.fechaHora) {
+            window.BEC.fechaHora = function(raw) {
+                if (!raw) return '';
+                var d = new Date(raw);
+                return isNaN(d.getTime()) ? raw : d.toLocaleString('es-CO');
+            };
+        }
+    }
+
+    function texto(id, valor) { document.getElementById(id).textContent = valor; }
+    function opcional(idP, idSpan, valor) {
+        var p = document.getElementById(idP);
+        if (valor) { texto(idSpan, valor); p.hidden = false; } else { p.hidden = true; }
+    }
+    function mensaje(textoMsg, error) {
+        var box = document.getElementById('mensajes');
+        box.textContent = textoMsg || '';
+        box.style.color = error ? '#dc2626' : '#15803d';
+    }
+
+    function sumarMinutos(horaStr, minutos) {
+        if (!horaStr || !minutos) return '';
+        var partes = horaStr.split(':');
+        var totalMin = (parseInt(partes[0], 10) * 60 + parseInt(partes[1], 10) + parseInt(minutos, 10)) % (24 * 60);
+        return String(Math.floor(totalMin / 60)).padStart(2, '0') + ':' + String(totalMin % 60).padStart(2, '0');
+    }
+
+    var esProveedor = false;
+    var solicitud = null;
+
+    function boton(textoBtn, clase, accion) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'sol-btn ' + clase;
+        b.textContent = textoBtn;
+        b.addEventListener('click', function () { accion(b); });
+        return b;
+    }
+
+    function pintarAcciones() {
+        var cont = document.getElementById('acciones');
+        cont.innerHTML = '';
+        if (esProveedor && SolUI.puedeResponder(solicitud)) {
+            cont.appendChild(boton('✓ Aceptar', 'sol-btn-primario', function (b) {
+                b.disabled = true;
+                SolUI.aceptar(ID).then(function (res) {
+                    if (!res.ok) { b.disabled = false; mensaje(SolUI.errorDe(res), true); return; }
+                    pintar(res.data); mensaje('Solicitud aceptada.');
+                }).catch(function () { b.disabled = false; mensaje('No se pudo conectar con el servidor.', true); });
+            }));
+            cont.appendChild(boton('✕ Rechazar', 'sol-btn-peligro', function () {
+                SolUI.rechazar(ID).then(function (s) { if (s) { pintar(s); mensaje('Solicitud rechazada.'); } });
+            }));
+        }
+        if (SolUI.puedeCancelar(solicitud)) {
+            cont.appendChild(boton('Cancelar solicitud', 'sol-btn-peligro', function () {
+                SolUI.cancelar(ID).then(function (s) { if (s) { pintar(s); mensaje('Solicitud cancelada.'); } });
+            }));
+        }
+    }
+
+    function pintar(s) {
+        solicitud = s;
+        document.getElementById('titulo').textContent = 'Solicitud #' + s.id;
+        document.getElementById('d-estado-burbuja').innerHTML = SolUI.estadoConMotivo(s);
+        // Estos valores son una copia fija de las condiciones del servicio al momento de solicitarlo
+        texto('d-servicio', s.nombre_servicio_copia);
+        texto('d-proveedor', esProveedor ? s.cliente_nombre + (s.cliente_telefono ? ' · ' + s.cliente_telefono : '') : s.nombre_proveedor);
+        texto('d-precio', BEC.dinero(s.precio_copia));
+        texto('d-duracion', s.duracion_minutos_copia + ' minutos');
+        texto('d-estado', s.estado_display || BEC.ESTADOS_SOLICITUD[s.estado] || s.estado);
+        document.getElementById('d-estado').className = 'estado-' + String(s.estado || '').toLowerCase();
+        texto('d-fecha', BEC.fecha(s.fecha_solicitada));
+        texto('d-hora', BEC.hora(s.hora_solicitada));
+        // HU-012 (10): la hora de fin la calcula el sistema con la duración conservada
+        texto('d-hora-fin', s.hora_fin ? BEC.hora(s.hora_fin) : sumarMinutos(s.hora_solicitada, s.duracion_minutos_copia));
+        // Al proveedor también se le muestra la dirección principal del perfil del cliente
+        document.getElementById('d-direccion').innerHTML = SolUI.bloqueDireccion(s, { principal: esProveedor });
+        opcional('p-complementaria', 'd-complementaria', s.informacion_complementaria);
+        opcional('p-observaciones', 'd-observaciones', s.observaciones);
+        texto('d-creada', BEC.fechaHora(s.creado_en));
+        texto('d-actualizada', BEC.fechaHora(s.actualizado_en));
+
+        // El servicio puede haber sido eliminado (la solicitud conserva su copia)
+        if (s.servicio && !esProveedor) {
+            var a = document.getElementById('ver-servicio');
+            a.href = BEC.url(BEC.cfg.pages.servicio, s.servicio);
+            a.hidden = false;
+        }
+        pintarAcciones();
+        document.getElementById('detalle').hidden = false;
+    }
+
+    BEC.requiereSesion(['CLIENTE', 'PROVEEDOR', 'PRO']).then(function (p) {
+        if (!p) { mensaje('Inicia sesión para ver esta solicitud.', true); return; }
+        esProveedor = ['PROVEEDOR', 'PRO'].indexOf(String(p.rol || '').toUpperCase()) !== -1;
+        if (esProveedor) {
+            // En el detalle, el proveedor ve los datos del cliente y vuelve a su panel
+            document.getElementById('etq-persona').textContent = 'Cliente:';
+            var volver = document.getElementById('link-volver');
+            volver.href = "{% url 'pagina-panel-proveedor' %}";
+            volver.textContent = 'Volver al Panel';
+        }
+        BEC.api(BEC.url(BEC.cfg.api.solicitud, ID)).then(function (res) {
+            if (res.status === 404) { mensaje('La solicitud no existe o no te pertenece.', true); return; }
+            if (!res.ok) { mensaje(SolUI.errorDe(res), true); return; }
+            pintar(res.data);
+        });
+    });
+})();
+</script>
+{% endblock %}

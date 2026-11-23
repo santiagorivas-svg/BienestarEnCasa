@@ -1,0 +1,776 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Solicitar servicio - Bienestar en Casa{% endblock %}
+
+{% block header_nav %}
+    {% include 'nav_cliente.html' %}
+{% endblock %}
+
+{% block body %}
+<div style="background-color: #f8fafc; min-height: calc(100vh - 72px); padding: 2.5rem 1rem; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing: border-box;">
+  <div style="max-width: 72rem; margin: 0 auto;">
+    
+    <!-- Encabezado principal -->
+    <div style="text-align: center; margin-bottom: 2.5rem;">
+      <h1 style="font-size: 2.25rem; font-weight: 800; color: #0f172a; margin: 0 0 0.75rem 0;">
+        Solicitar servicio
+      </h1>
+      <p style="color: #64748b; font-size: 1rem; max-width: 36rem; margin: 0 auto; line-height: 1.5;">
+        Agenda una visita a domicilio con nuestros profesionales. Atención únicamente de Lunes a Viernes entre 8:00 AM y 5:00 PM.
+      </p>
+    </div>
+
+    <!-- Contenedor Principal (2 Columnas) -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; align-items: start;">
+      
+      <style>
+        .form-input-field {
+          width: 100%;
+          box-sizing: border-box;
+          padding: 0.85rem 1rem;
+          border-radius: 0.75rem;
+          border: 1px solid #e2e8f0;
+          background-color: #f8fafc;
+          font-size: 0.95rem;
+          color: #0f172a;
+          outline: none;
+          transition: all 0.2s ease;
+        }
+        .form-input-field:focus {
+          background-color: #ffffff;
+          border-color: #2563eb;
+          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        .time-pill {
+          background-color: #f1f5f9;
+          color: #334155;
+          font-size: 0.8rem;
+          font-weight: 600;
+          padding: 0.4rem 0.75rem;
+          border-radius: 9999px;
+          display: inline-block;
+        }
+        .day-pill {
+          background-color: #e0f2fe;
+          color: #0284c7;
+          font-size: 0.8rem;
+          font-weight: 600;
+          padding: 0.35rem 0.85rem;
+          border-radius: 9999px;
+          display: inline-block;
+        }
+        .alert-field-error {
+          color: #dc2626;
+          font-size: 0.8rem;
+          font-weight: 600;
+          margin-top: 0.4rem;
+          display: none;
+        }
+        .service-summary-card {
+          background-color: #f0f9ff;
+          border: 1px solid #bae6fd;
+          border-radius: 0.85rem;
+          padding: 1rem 1.25rem;
+          margin-bottom: 1.25rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .fieldset-oculto {
+          border: none;
+          margin: 0;
+          padding: 0;
+        }
+      </style>
+
+      <!-- Columna Izquierda: Formulario -->
+      <div style="background-color: #ffffff; border-radius: 1.25rem; border: 1px solid #e2e8f0; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+        <div id="mensajes"></div>
+
+        <form id="formSolicitarServicio" novalidate>
+          {% csrf_token %}
+          
+          <!-- Información Personal -->
+          <div style="margin-bottom: 2rem;">
+            <h2 style="font-size: 1.25rem; font-weight: 700; color: #0f172a; margin: 0 0 1.25rem 0;">
+              Información personal
+            </h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
+              <div>
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem;">
+                  Nombre completo <span style="color: #ef4444;">*</span>
+                </label>
+                <input type="text" id="nombre_cliente" class="form-input-field" placeholder="María González" required>
+              </div>
+
+              <div>
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem;">
+                  Correo electrónico <span style="color: #ef4444;">*</span>
+                </label>
+                <fieldset class="fieldset-oculto" disabled>
+                  <input type="email" id="email_cliente" class="form-input-field" placeholder="correo@ejemplo.com" required>
+                </fieldset>
+              </div>
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem;">
+                Teléfono <span style="color: #ef4444;">*</span>
+              </label>
+              <input type="tel" id="telefono_cliente" class="form-input-field" placeholder="+57 300 123 4567" required>
+            </div>
+          </div>
+
+          <!-- Detalles del Servicio -->
+          <div>
+            <h2 style="font-size: 1.25rem; font-weight: 700; color: #0f172a; margin: 0 0 1.25rem 0;">
+              Detalles del servicio
+            </h2>
+
+            <!-- TARJETA INFORMATIVA DEL SERVICIO SELECCIONADO -->
+            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.75rem 1rem; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <span style="font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.025em; display: block;">
+                  Servicio seleccionado
+                </span>
+                <span id="nombre_servicio_preview" style="font-size: 0.95rem; font-weight: 600; color: #0f172a;">
+                  Cargando servicio...
+                </span>
+              </div>
+              <div style="text-align: right;">
+                <div id="precio_servicio_preview" style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">--</div>
+                <div id="duracion_servicio_preview" style="font-size: 0.75rem; color: #64748b;">Duración: -- min</div>
+              </div>
+            </div>
+
+            <!-- H-13: lista desplegable con las direcciones guardadas; se precarga la principal -->
+            <div id="bloque_direcciones_guardadas" style="margin-bottom: 1.25rem;" hidden>
+              <label for="select_direccion_guardada" style="display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem;">
+                Mis direcciones guardadas
+              </label>
+              <select id="select_direccion_guardada" class="form-input-field"></select>
+              <a href="{% url 'pagina-direcciones' %}" style="display: inline-block; margin-top: 0.4rem; font-size: 0.8rem; color: #2563eb; font-weight: 600; text-decoration: none;">Administrar mis direcciones</a>
+            </div>
+
+            <!-- HU-12 (E2 & E9): CAMPOS SEPARADOS DE DIRECCIÓN Y BARRIO/SECTOR -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
+              <div>
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem;">
+                  Dirección de atención <span style="color: #ef4444;">*</span>
+                </label>
+                <input type="text" id="direccion_atencion" class="form-input-field" placeholder="Ej: Calle 5 # 4-20" required>
+                <span id="error_direccion" class="alert-field-error"></span>
+              </div>
+
+              <div>
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem;">
+                  Barrio o Sector <span style="color: #ef4444;">*</span>
+                </label>
+                <input type="text" id="barrio_sector" class="form-input-field" placeholder="Ej: San Antonio" required>
+                <span id="error_barrio" class="alert-field-error"></span>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
+              <div>
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem;">
+                  Fecha preferida (Lunes a Viernes) <span style="color: #ef4444;">*</span>
+                </label>
+                <input type="date" id="fecha_preferida" class="form-input-field" required>
+                <span id="error_fecha" class="alert-field-error"></span>
+              </div>
+
+              <div>
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem;">
+                  Horario disponible <span style="color: #ef4444;">*</span>
+                </label>
+                <select id="horario_disponible" class="form-input-field" required>
+                  <option value="" disabled selected>Selecciona un horario (8am - 5pm)</option>
+                  <option value="08:00:00">08:00 AM</option>
+                  <option value="09:00:00">09:00 AM</option>
+                  <option value="10:00:00">10:00 AM</option>
+                  <option value="11:00:00">11:00 AM</option>
+                  <option value="12:00:00">12:00 PM</option>
+                  <option value="13:00:00">01:00 PM</option>
+                  <option value="14:00:00">02:00 PM</option>
+                  <option value="15:00:00">03:00 PM</option>
+                  <option value="16:00:00">04:00 PM</option>
+                </select>
+                <!-- HU-12 (E10): Cálculo dinámico de hora de finalización -->
+                <div id="calculo_hora_fin" style="font-size: 0.8rem; color: #2563eb; font-weight: 600; margin-top: 0.4rem; display: none;"></div>
+              </div>
+            </div>
+
+            <!-- HU-012 (2): información complementaria del lugar y observaciones por separado -->
+            <div style="margin-bottom: 1.25rem;">
+              <label for="informacion_complementaria" style="display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem;">
+                Información complementaria del lugar (Opcional)
+              </label>
+              <input type="text" id="informacion_complementaria" class="form-input-field" placeholder="Ej: Apartamento 302, torre B, portería norte">
+            </div>
+
+            <div style="margin-bottom: 1.75rem;">
+              <label for="observaciones" style="display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem;">
+                Observaciones (Opcional)
+              </label>
+              <textarea id="observaciones" rows="3" class="form-input-field" placeholder="Instrucciones especiales para el profesional, mascotas, etc..." style="resize: vertical;"></textarea>
+            </div>
+
+            <!-- Botón Enviar Solicitud -->
+            <button type="submit" id="btnEnviarSolicitud" style="width: 100%; background-color: #2563eb; color: #ffffff; font-weight: 700; padding: 1rem; border-radius: 0.85rem; border: none; font-size: 1rem; cursor: pointer; transition: background-color 0.2s ease;">
+              Enviar solicitud
+            </button>
+
+          </div>
+        </form>
+      </div>
+
+      <!-- Columna Derecha: Tarjetas de Información -->
+      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        
+        <!-- Tarjeta 1: Horario del Proveedor -->
+        <div style="background-color: #ffffff; border-radius: 1.25rem; border: 1px solid #e2e8f0; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+          <h3 style="font-size: 1.125rem; font-weight: 700; color: #0f172a; margin: 0 0 1.25rem 0;">
+            📅 Horario de atención
+          </h3>
+
+          <div style="margin-bottom: 1.25rem;">
+            <span style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">
+              DÍAS PERMITIDOS
+            </span>
+            <div id="dias_permitidos" style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+              <span class="day-pill">Lunes</span>
+              <span class="day-pill">Martes</span>
+              <span class="day-pill">Miércoles</span>
+              <span class="day-pill">Jueves</span>
+              <span class="day-pill">Viernes</span>
+            </div>
+          </div>
+
+          <div>
+            <span id="titulo_horarios" style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">
+              HORARIOS DISPONIBLES
+            </span>
+            <div id="lista_horarios" style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+              <span class="time-pill">08:00 AM</span>
+              <span class="time-pill">09:00 AM</span>
+              <span class="time-pill">10:00 AM</span>
+              <span class="time-pill">11:00 AM</span>
+              <span class="time-pill">12:00 PM</span>
+              <span class="time-pill">01:00 PM</span>
+              <span class="time-pill">02:00 PM</span>
+              <span class="time-pill">03:00 PM</span>
+              <span class="time-pill">04:00 PM</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjeta 2: Información Rápida -->
+        <div style="background-color: #ffffff; border-radius: 1.25rem; border: 1px solid #e2e8f0; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+          <h3 style="font-size: 1.125rem; font-weight: 700; color: #0f172a; margin: 0 0 1.25rem 0;">
+            Información rápida
+          </h3>
+          <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1rem; color: #475569; font-size: 0.9rem;">
+            <li style="display: flex; gap: 0.75rem;">
+              <span style="color: #2563eb;">•</span>
+              <span id="texto_horario_rapido">El horario mostrado es el que configuró el proveedor.</span>
+            </li>
+            <li style="display: flex; gap: 0.75rem;">
+              <span style="color: #2563eb;">•</span>
+              Las solicitudes son confirmadas en menos de 24 horas laborables.
+            </li>
+            <li style="display: flex; gap: 0.75rem;">
+              <span style="color: #2563eb;">•</span>
+              Recibirás una notificación con la confirmación o contrapropuesta.
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var form = document.getElementById('formSolicitarServicio');
+  var inputFecha = document.getElementById('fecha_preferida');
+  var selectHorario = document.getElementById('horario_disponible');
+  var errorFecha = document.getElementById('error_fecha');
+  var errorDireccion = document.getElementById('error_direccion');
+  var errorBarrio = document.getElementById('error_barrio');
+  
+  var namePreview = document.getElementById('nombre_servicio_preview');
+  var pricePreview = document.getElementById('precio_servicio_preview');
+  var durationPreview = document.getElementById('duracion_servicio_preview');
+  var calculoHoraFinDiv = document.getElementById('calculo_hora_fin');
+
+  var servicioActual = null;
+
+  var pathSegments = window.location.pathname.split('/').filter(Boolean);
+  var servicioIdUrl = pathSegments[pathSegments.length - 1];
+
+  function formatearDinero(monto) {
+    if (window.BEC && window.BEC.dinero) {
+      return window.BEC.dinero(monto);
+    }
+    return '$' + Number(monto || 0).toLocaleString('es-CO');
+  }
+
+  // HU-12 (E10): Calcular y mostrar la hora de finalización estimada
+  function actualizarCalculoHoraFin() {
+    var horaInicioVal = selectHorario.value;
+    var duracionMinutos = servicioActual && servicioActual.duracion_minutos ? Number(servicioActual.duracion_minutos) : 60;
+    
+    if (!horaInicioVal) {
+      calculoHoraFinDiv.style.display = 'none';
+      return;
+    }
+
+    var partes = horaInicioVal.split(':').map(Number);
+    var totalMinutosInicio = partes[0] * 60 + partes[1];
+    var totalMinutosFin = totalMinutosInicio + duracionMinutos;
+
+    var horaFinH = Math.floor(totalMinutosFin / 60) % 24;
+    var horaFinM = totalMinutosFin % 60;
+    var hhFin = String(horaFinH).padStart(2, '0');
+    var mmFin = String(horaFinM).padStart(2, '0');
+
+    var apFin = horaFinH >= 12 ? 'PM' : 'AM';
+    var h12Fin = horaFinH % 12 || 12;
+    var horaFin12Str = String(h12Fin).padStart(2, '0') + ':' + mmFin + ' ' + apFin;
+
+    calculoHoraFinDiv.textContent = '⏱️ Hora estimada de finalización: ' + horaFin12Str + ' (' + duracionMinutos + ' min)';
+    calculoHoraFinDiv.style.display = 'block';
+  }
+
+  if (selectHorario) {
+    selectHorario.addEventListener('change', actualizarCalculoHoraFin);
+  }
+
+  function cargarDetalleServicio() {
+    if (!servicioIdUrl || isNaN(servicioIdUrl)) {
+      if (namePreview) namePreview.textContent = 'Servicio no especificado';
+      return;
+    }
+
+    var urlServicio = '/api/catalogo/servicios/' + servicioIdUrl + '/';
+    
+    fetch(urlServicio)
+      .then(function(res) { return res.ok ? res.json() : null; })
+      .then(function(s) {
+        if (s) {
+          servicioActual = s;
+          if (namePreview) namePreview.textContent = s.nombre || s.titulo || 'Servicio de Bienestar';
+          if (pricePreview) pricePreview.textContent = formatearDinero(s.precio);
+          if (durationPreview) durationPreview.textContent = 'Duración: ' + (s.duracion_minutos || 60) + ' min';
+          var prov = s.proveedor_id || (s.proveedor && (s.proveedor.id || s.proveedor));
+          if (prov) cargarDisponibilidadProveedor(prov);
+          actualizarCalculoHoraFin();
+        } else {
+          cargarDesdeCatalogoGeneral();
+        }
+      })
+      .catch(function() {
+        cargarDesdeCatalogoGeneral();
+      });
+  }
+
+  function cargarDesdeCatalogoGeneral() {
+    var urlServicios = (window.BEC && window.BEC.cfg && window.BEC.cfg.api && window.BEC.cfg.api.servicios) ? window.BEC.cfg.api.servicios : '/api/catalogo/servicios/';
+    fetch(urlServicios)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var lista = window.BEC && window.BEC.lista ? window.BEC.lista(data) : (Array.isArray(data) ? data : (data.results || []));
+        var encontrado = lista.find(function(item) { return String(item.id) === String(servicioIdUrl); });
+        if (encontrado) {
+          servicioActual = encontrado;
+          if (namePreview) namePreview.textContent = encontrado.nombre || 'Servicio de Bienestar';
+          if (pricePreview) pricePreview.textContent = formatearDinero(encontrado.precio);
+          if (durationPreview) durationPreview.textContent = 'Duración: ' + (encontrado.duracion_minutos || 60) + ' min';
+          var prov2 = encontrado.proveedor_id || (encontrado.proveedor && (encontrado.proveedor.id || encontrado.proveedor));
+          if (prov2) cargarDisponibilidadProveedor(prov2);
+          actualizarCalculoHoraFin();
+        } else {
+          if (namePreview) namePreview.textContent = 'Servicio #' + servicioIdUrl;
+        }
+      });
+  }
+
+  cargarDetalleServicio();
+
+  if (inputFecha) {
+    var hoy = new Date();
+    var yyyy = hoy.getFullYear();
+    var mm = String(hoy.getMonth() + 1).padStart(2, '0');
+    var dd = String(hoy.getDate()).padStart(2, '0');
+    inputFecha.min = yyyy + '-' + mm + '-' + dd;
+
+    inputFecha.addEventListener('change', function() {
+      aplicarDisponibilidadCliente(inputFecha.value);
+    });
+  }
+
+  var disponibilidadProveedor = null;
+  var NOMBRES = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+  var opcionesHorarioBase = Array.prototype.map.call(
+    selectHorario.options,
+    function(opcion) { return opcion.cloneNode(true); }
+  );
+
+  function restaurarHorariosBase() {
+    selectHorario.replaceChildren.apply(selectHorario, opcionesHorarioBase.map(function(opcion) { return opcion.cloneNode(true); }));
+  }
+
+  function quitarHorariosPasados(fechaSeleccionada) {
+    var ahora = new Date();
+    var fechaHoy = ahora.getFullYear() + '-' + String(ahora.getMonth() + 1).padStart(2, '0') + '-' + String(ahora.getDate()).padStart(2, '0');
+    if (fechaSeleccionada !== fechaHoy) return;
+
+    var minutosActuales = ahora.getHours() * 60 + ahora.getMinutes();
+    Array.prototype.slice.call(selectHorario.options).forEach(function(opcion) {
+      if (!opcion.value) return;
+      var partes = opcion.value.split(':').map(Number);
+      if (partes[0] * 60 + partes[1] <= minutosActuales) opcion.remove();
+    });
+
+    var quedanHorarios = Array.prototype.some.call(selectHorario.options, function(opcion) { return Boolean(opcion.value); });
+    if (!quedanHorarios) {
+      selectHorario.innerHTML = '<option value="" disabled selected>No quedan horarios disponibles para hoy</option>';
+      if (errorFecha) {
+        errorFecha.textContent = 'Ya no hay horarios disponibles para hoy. Selecciona otra fecha.';
+        errorFecha.style.display = 'block';
+      }
+    }
+  }
+
+  // Quita las horas en que el proveedor ya tiene otra reserva (cualquier servicio o cliente)
+  function quitarHorariosOcupados(fechaSeleccionada) {
+    var ocupados = ((disponibilidadProveedor && disponibilidadProveedor.ocupados) || []).filter(function(o) {
+      return o.fecha === fechaSeleccionada;
+    });
+    if (!ocupados.length) return;
+    var aMin = function(hhmm) { var p = hhmm.split(':').map(Number); return p[0] * 60 + p[1]; };
+    var duracion = servicioActual && servicioActual.duracion_minutos ? Number(servicioActual.duracion_minutos) : 60;
+    Array.prototype.slice.call(selectHorario.options).forEach(function(opcion) {
+      if (!opcion.value) return;
+      var inicio = aMin(opcion.value);
+      var fin = inicio + Math.max(duracion, 1);
+      var choca = ocupados.some(function(o) { return inicio < aMin(o.hora_fin) && fin > aMin(o.hora_inicio); });
+      if (choca) opcion.remove();
+    });
+    var quedan = Array.prototype.some.call(selectHorario.options, function(opcion) { return Boolean(opcion.value); });
+    if (!quedan) {
+      selectHorario.innerHTML = '<option value="" disabled selected>El proveedor no tiene horas libres ese día</option>';
+      if (errorFecha) {
+        errorFecha.textContent = 'El proveedor ya tiene reservado todo ese día. Selecciona otra fecha.';
+        errorFecha.style.display = 'block';
+      }
+    }
+  }
+
+  function fmt12(hhmm) {
+    var p = hhmm.split(':');
+    var h = parseInt(p[0], 10);
+    var m = p[1];
+    var ap = h >= 12 ? 'PM' : 'AM';
+    var h12 = h % 12 || 12;
+    return String(h12).padStart(2,'0') + ':' + m + ' ' + ap;
+  }
+
+  function pintarResumenDisponibilidad() {
+    var contDias = document.getElementById('dias_permitidos');
+    var contHoras = document.getElementById('lista_horarios');
+    var titulo = document.getElementById('titulo_horarios');
+    var rapido = document.getElementById('texto_horario_rapido');
+    if (!disponibilidadProveedor || !disponibilidadProveedor.configurado) return;
+    if (contDias) {
+      contDias.innerHTML = disponibilidadProveedor.dias.map(function(d) {
+        return '<span class="day-pill">' + NOMBRES[d.dia_semana] + ' ' + d.hora_inicio + '–' + d.hora_fin + '</span>';
+      }).join('');
+    }
+    if (titulo) titulo.textContent = 'HORARIO CONFIGURADO POR EL PROVEEDOR';
+    if (contHoras) {
+      contHoras.innerHTML = disponibilidadProveedor.dias.map(function(d) {
+        return '<span class="time-pill">' + NOMBRES[d.dia_semana] + ': ' + fmt12(d.hora_inicio) + ' – ' + fmt12(d.hora_fin) + '</span>';
+      }).join('');
+    }
+    if (rapido) rapido.textContent = 'Solo puedes solicitar dentro del horario que el proveedor configuró.';
+  }
+
+  function aplicarDisponibilidadCliente(valorFecha) {
+    if (!valorFecha || !selectHorario) return;
+    if (!disponibilidadProveedor || !disponibilidadProveedor.configurado) {
+      restaurarHorariosBase();
+      var fechaSel = new Date(valorFecha + 'T00:00:00');
+      var jsDay = fechaSel.getDay();
+      if (jsDay === 0 || jsDay === 6) {
+        if (errorFecha) { errorFecha.textContent = 'Atención únicamente de Lunes a Viernes.'; errorFecha.style.display = 'block'; }
+        inputFecha.value = '';
+      } else {
+        if (errorFecha) { errorFecha.textContent = ''; errorFecha.style.display = 'none'; }
+        quitarHorariosPasados(valorFecha);
+        quitarHorariosOcupados(valorFecha);
+      }
+      return;
+    }
+    var fecha = new Date(valorFecha + 'T00:00:00');
+    var diaPy = (fecha.getDay() + 6) % 7;
+    var bloqueado = (disponibilidadProveedor.periodos || []).some(function(p) {
+      return valorFecha >= p.fecha_inicio && valorFecha <= p.fecha_fin;
+    });
+    if (bloqueado) {
+      if (errorFecha) { errorFecha.textContent = 'El proveedor no está disponible en la fecha seleccionada.'; errorFecha.style.display = 'block'; }
+      selectHorario.innerHTML = '<option value="" disabled selected>Fecha no disponible</option>';
+      inputFecha.value = '';
+      return;
+    }
+    var franja = disponibilidadProveedor.dias.find(function(d) { return Number(d.dia_semana) === diaPy; });
+    if (!franja) {
+      if (errorFecha) { errorFecha.textContent = 'El proveedor no atiende el día seleccionado.'; errorFecha.style.display = 'block'; }
+      selectHorario.innerHTML = '<option value="" disabled selected>Día sin atención</option>';
+      inputFecha.value = '';
+      return;
+    }
+    if (errorFecha) { errorFecha.textContent = ''; errorFecha.style.display = 'none'; }
+    var ini = franja.hora_inicio.split(':').map(Number);
+    var fin = franja.hora_fin.split(':').map(Number);
+    var cursor = ini[0] * 60 + ini[1];
+    var limite = fin[0] * 60 + fin[1];
+    var html = '<option value="" disabled selected>Selecciona un horario (' + franja.hora_inicio + ' - ' + franja.hora_fin + ')</option>';
+    while (cursor < limite) {
+      var hh = String(Math.floor(cursor / 60)).padStart(2, '0');
+      var mm = String(cursor % 60).padStart(2, '0');
+      html += '<option value="' + hh + ':' + mm + ':00">' + fmt12(hh + ':' + mm) + '</option>';
+      cursor += 60;
+    }
+    selectHorario.innerHTML = html;
+    quitarHorariosPasados(valorFecha);
+    quitarHorariosOcupados(valorFecha);
+  }
+
+  function cargarDisponibilidadProveedor(proveedorId) {
+    if (!proveedorId) return;
+    fetch('/api/proveedores/' + proveedorId + '/disponibilidad-publica/')
+      .then(function(r) { return r.ok ? r.json() : null; })
+      .then(function(data) {
+        if (!data) return;
+        disponibilidadProveedor = data;
+        pintarResumenDisponibilidad();
+        if (inputFecha && inputFecha.value) aplicarDisponibilidadCliente(inputFecha.value);
+      });
+  }
+
+  if (window.BEC && window.BEC.api) {
+    window.BEC.api('/api/usuarios/perfil/').then(function(res) {
+      if (res && res.ok && res.data) {
+        var perfil = res.data.usuario || res.data;
+        var inputNombre = document.getElementById('nombre_cliente');
+        var inputEmail = document.getElementById('email_cliente');
+        var inputTelefono = document.getElementById('telefono_cliente');
+
+        if (inputNombre && (perfil.nombres || perfil.first_name)) {
+          inputNombre.value = (perfil.nombres || perfil.first_name) + ' ' + (perfil.apellidos || perfil.last_name || '');
+        }
+        if (inputEmail && (perfil.email || perfil.correo)) {
+          inputEmail.value = perfil.email || perfil.correo;
+        }
+        if (inputTelefono && perfil.telefono) {
+          inputTelefono.value = perfil.telefono;
+        }
+      }
+    });
+  }
+
+  // H-13: direcciones guardadas del cliente en una lista desplegable; se precarga la principal
+  var selectDireccion = document.getElementById('select_direccion_guardada');
+  var direccionesGuardadas = [];
+
+  function aplicarDireccionSeleccionada() {
+    var inputDir = document.getElementById('direccion_atencion');
+    var inputBarrio = document.getElementById('barrio_sector');
+    var elegida = direccionesGuardadas.find(function(d) { return String(d.id) === selectDireccion.value; });
+    var inputComplemento = document.getElementById('informacion_complementaria');
+    if (elegida) {
+      inputDir.value = elegida.direccion || '';
+      inputBarrio.value = elegida.barrio || '';
+      inputComplemento.value = elegida.complemento || '';
+    } else {
+      // "Otra dirección": campos vacíos para escribirla
+      inputDir.value = '';
+      inputBarrio.value = '';
+      inputComplemento.value = '';
+      inputDir.focus();
+    }
+  }
+
+  function cargarDireccionesGuardadas() {
+    if (!window.BEC || !window.BEC.api || !selectDireccion) return;
+    window.BEC.api(window.BEC.cfg.api.direcciones).then(function(res) {
+      direccionesGuardadas = res && res.ok ? window.BEC.lista(res.data) : [];
+      if (!direccionesGuardadas.length) return;
+      // La principal primero
+      direccionesGuardadas.sort(function(a, b) { return (b.es_principal ? 1 : 0) - (a.es_principal ? 1 : 0); });
+      selectDireccion.innerHTML = '';
+      direccionesGuardadas.forEach(function(d) {
+        var opcion = document.createElement('option');
+        opcion.value = d.id;
+        opcion.textContent = d.direccion + (d.barrio ? ' - ' + d.barrio : '') + (d.es_principal ? ' (Principal)' : '');
+        selectDireccion.appendChild(opcion);
+      });
+      var otra = document.createElement('option');
+      otra.value = '';
+      otra.textContent = 'Escribir otra dirección...';
+      selectDireccion.appendChild(otra);
+      selectDireccion.value = String(direccionesGuardadas[0].id);
+      document.getElementById('bloque_direcciones_guardadas').hidden = false;
+      aplicarDireccionSeleccionada();
+    }).catch(function() {});
+  }
+
+  if (selectDireccion) {
+    selectDireccion.addEventListener('change', aplicarDireccionSeleccionada);
+    cargarDireccionesGuardadas();
+  }
+
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // Limpiar errores visuales previos
+      if (errorFecha) { errorFecha.textContent = ''; errorFecha.style.display = 'none'; }
+      if (errorDireccion) { errorDireccion.textContent = ''; errorDireccion.style.display = 'none'; }
+      if (errorBarrio) { errorBarrio.textContent = ''; errorBarrio.style.display = 'none'; }
+
+      var direccionVal = document.getElementById('direccion_atencion').value.trim();
+      var barrioVal = document.getElementById('barrio_sector').value.trim();
+      var hayError = false;
+
+      // E7: Validar obligatoriedad de dirección y barrio de forma visual por campo
+      if (!direccionVal) {
+        if (errorDireccion) { errorDireccion.textContent = 'La dirección de atención es obligatoria.'; errorDireccion.style.display = 'block'; }
+        hayError = true;
+      }
+      if (!barrioVal) {
+        if (errorBarrio) { errorBarrio.textContent = 'El barrio o sector es obligatorio.'; errorBarrio.style.display = 'block'; }
+        hayError = true;
+      }
+      // HU-012 (7): se indica todo lo pendiente (fecha y horario comparten el mismo aviso)
+      var pendientesFecha = [];
+      if (!inputFecha.value) pendientesFecha.push('Selecciona una fecha válida.');
+      if (!selectHorario.value) pendientesFecha.push('Selecciona un horario disponible.');
+      if (pendientesFecha.length) {
+        if (errorFecha) { errorFecha.textContent = pendientesFecha.join(' '); errorFecha.style.display = 'block'; }
+        hayError = true;
+      }
+
+      if (hayError) return;
+
+      var csrfToken = '';
+      var csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+      if (csrfInput) csrfToken = csrfInput.value;
+
+      // El proveedor sale del servicio elegido; si aún no cargó, el backend lo toma del servicio
+      var proveedorId = servicioActual ? (servicioActual.proveedor_id || (servicioActual.proveedor ? (servicioActual.proveedor.id || servicioActual.proveedor) : null)) : null;
+      var observacionesVal = document.getElementById('observaciones').value.trim();
+
+      // HU-12 (E2 & E9): Enviar campos de dirección y barrio independientes
+      var payload = {
+        servicio: parseInt(servicioIdUrl),
+        fecha_solicitada: inputFecha.value,
+        hora_solicitada: selectHorario.value,
+        direccion_atencion: direccionVal,
+        barrio_sector: barrioVal,
+        informacion_complementaria: document.getElementById('informacion_complementaria').value.trim(),
+        observaciones: observacionesVal
+      };
+
+      if (proveedorId) payload.proveedor = parseInt(proveedorId, 10);
+
+      var btnSubmit = document.getElementById('btnEnviarSolicitud');
+      if (btnSubmit) {
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = 'Enviando...';
+      }
+
+      fetch('/api/solicitudes/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify(payload)
+      })
+      .then(function(response) {
+        if (btnSubmit) {
+          btnSubmit.disabled = false;
+          btnSubmit.textContent = 'Enviar solicitud';
+        }
+
+        if (response.status === 201 || response.ok) {
+          var msgs = document.getElementById('mensajes');
+          if (msgs) {
+            msgs.innerHTML = `
+              <div style="background-color:#F0FDF4; color:#166534; padding:1.25rem; border-radius:12px; font-weight:500; margin-bottom:1.5rem; border:1px solid #BBF7D0;">
+                <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
+                  <span style="font-size:1.25rem;">✅</span>
+                  <strong style="font-size:1.05rem;">¡Solicitud creada con éxito!</strong>
+                </div>
+                <p style="margin:0 0 1rem 0; font-size:0.9rem; color:#15803D;">
+                  Tu reserva ha sido registrada correctamente. Un profesional la confirmará en breve.
+                </p>
+                <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+                  <a href="{% url 'pagina-mis-solicitudes' %}" style="background-color:#166534; color:#ffffff; padding:0.5rem 1rem; border-radius:8px; text-decoration:none; font-size:0.875rem; font-weight:600; display:inline-block;">
+                    Ver Mis Solicitudes
+                  </a>
+                </div>
+              </div>
+            `;
+            msgs.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+          form.reset();
+          // Vuelve a dejar la dirección principal precargada y libera la hora ya reservada
+          if (direccionesGuardadas.length) {
+            selectDireccion.value = String(direccionesGuardadas[0].id);
+            aplicarDireccionSeleccionada();
+          }
+          if (servicioActual && servicioActual.proveedor) {
+            cargarDisponibilidadProveedor(servicioActual.proveedor.id || servicioActual.proveedor);
+          }
+        } else {
+          return response.json().then(function(data) {
+            var msgs = document.getElementById('mensajes');
+            if (msgs) {
+              var textoError = '';
+              var NOMBRES_CAMPO = {
+                servicio: 'Servicio', proveedor: 'Proveedor', fecha_solicitada: 'Fecha', hora_solicitada: 'Horario',
+                direccion_atencion: 'Dirección de atención', barrio_sector: 'Barrio o sector',
+                informacion_complementaria: 'Información complementaria', observaciones: 'Observaciones',
+                non_field_errors: 'Solicitud', detail: 'Solicitud'
+              };
+              for (var key in data) {
+                var campo = NOMBRES_CAMPO[key] || key;
+                var detalle = Array.isArray(data[key]) ? data[key].join(' ') : data[key];
+                textoError += '<b>' + campo + ':</b> ' + detalle + '<br>';
+              }
+              msgs.innerHTML = '<div style="background-color:#FEF2F2; color:#DC2626; padding:12px 16px; border-radius:12px; font-weight:600; margin-bottom:16px; border:1px solid #FECACA;">' + textoError + '</div>';
+            }
+          });
+        }
+      })
+      .catch(function(err) {
+        if (btnSubmit) {
+          btnSubmit.disabled = false;
+          btnSubmit.textContent = 'Enviar solicitud';
+        }
+        console.error("Error al enviar solicitud:", err);
+      });
+    });
+  }
+});
+</script>
+{% endblock %}

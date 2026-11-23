@@ -1,0 +1,382 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="BienestarEnCasa - Servicios de bienestar integral en el hogar">
+    <title>{% block title %}BienestarEnCasa{% endblock %}</title>
+    
+    <link rel="stylesheet" href="{% static 'estilos.css' %}?v=1.4">
+    <link rel="icon" href="{% static 'logo.png' %}">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="body-content">
+
+    <!-- Header Fijo -->
+    <header class="main-header" style="width: 100%; background-color: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 0.85rem 2rem; box-sizing: border-box;">
+        <div class="header-container" style="max-width: 1280px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;">
+            <a href="{% url 'pagina-inicio' %}" class="brand-logo" style="display: flex; align-items: center; gap: 0.6rem; text-decoration: none;" aria-label="BienestarEnCasa - Inicio">
+                <span class="logo-badge" style="background-color: #1A68FF; color: #ffffff; font-weight: 800; font-size: 1.1rem; padding: 0.4rem 0.65rem; border-radius: 0.5rem; line-height: 1;">B+</span>
+                <span style="font-size: 1.2rem; font-weight: 800; color: #0f172a; letter-spacing: -0.02em;">BienestarEnCasa</span>
+            </a>
+            
+            <!-- Botón Hamburguesa (Oculto por defecto) -->
+            <!-- Botón Hamburguesa -->
+            <button type="button" class="btn-menu-mobile" id="btnMenuMobile" aria-label="Abrir menú">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1A68FF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <!-- Navegación Principal -->
+            <nav class="main-nav" aria-label="Navegación principal">
+                {% block header_nav %}
+                    <ul class="nav-list" id="global-nav-list">
+                        <li><button type="button" id="btn-abrir-login-modal" class="btn-nav-login">Iniciar sesión</button></li>
+                    </ul>
+                {% endblock %}
+            </nav>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="main-content">
+        {% block body %}{% endblock %}
+    </main>
+
+    <!-- Footer Global -->
+    {% block footer %}
+    <footer class="site-footer">
+        <div class="container footer-container">
+            <p>&copy; {% now "Y" %} BienestarEnCasa. Todos los derechos reservados.</p>
+            <ul class="footer-links">
+                <li><a href="#">Política de Privacidad</a></li>
+                <li><a href="#">Términos y Condiciones</a></li>
+                <li><a href="#">Contacto</a></li>
+            </ul>
+        </div>
+    </footer>
+    {% endblock %}
+
+    <!-- Plantillas HTML de Navbars según Sesión -->
+    <template id="tmpl-nav-cliente">
+        {% include 'nav_cliente.html' %}
+    </template>
+
+    <template id="tmpl-nav-proveedor">
+        {% include 'nav_proveedor.html' %}
+    </template>
+
+    <!-- Modal Global de Autenticación -->
+    <div id="modalLogin" class="modal-login-overlay" aria-hidden="true">
+        <div class="modal-login-container">
+            <button type="button" class="btn-cerrar-modal" id="btnCerrarModal" aria-label="Cerrar modal">&times;</button>
+            
+            <!-- VISTA INICIAR SESIÓN -->
+            <div id="vistaLoginModal">
+                <div class="login-logo-badge">B+</div>
+                <h2 class="login-title-text">Bienvenido</h2>
+                <p class="login-subtitle-text">Ingresa tus credenciales para acceder</p>
+
+                <div class="login-card-box">
+                    <div id="mensajesModal" aria-live="polite"></div>
+
+                    <div class="user-avatar-circle">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
+
+                    <form id="loginFormModal">
+                        {% csrf_token %}
+                        <div class="form-group-field">
+                            <label for="emailModal">Correo Electrónico</label>
+                            <input type="email" id="emailModal" name="email" placeholder="ejemplo@correo.com" required>
+                        </div>
+
+                        <div class="form-group-field">
+                            <label for="passwordModal">Contraseña</label>
+                            <input type="password" id="passwordModal" name="password" placeholder="••••••••" required>
+                        </div>
+
+                        <div style="text-align: right; margin-top: 0.3rem; margin-bottom: 1rem;">
+                            <a href="{% url 'password_reset' %}" style="color: #2563eb; font-size: 0.85rem; font-weight: 600; text-decoration: none;">
+                                ¿Olvidaste tu contraseña?
+                            </a>
+                        </div>
+
+                        <button type="button" id="btnSubmitLogin" class="btn-login-submit">Iniciar sesión</button>
+                    </form>
+
+                    <p class="login-footer-register">
+                        ¿No tienes cuenta? <a href="users/registro.html" id="linkIrARegistro">Regístrate aquí</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- VISTA REGISTRO -->
+            <div id="vistaRegistroModal" style="display: none;">
+                <div class="login-logo-badge">B+</div>
+                <h2 class="login-title-text">Crea tu cuenta</h2>
+                <p class="login-subtitle-text">Únete a Bienestar en Casa en pocos pasos</p>
+
+                <div class="login-card-box">
+                    <div id="mensajesRegistroModal" aria-live="polite"></div>
+
+                    <form id="registroFormModal">
+                        {% csrf_token %}
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div class="form-group-field">
+                                <label for="regNombres">Nombres</label>
+                                <input type="text" id="regNombres" name="nombres" placeholder="Ej: Maria" required>
+                            </div>
+                            <div class="form-group-field">
+                                <label for="regApellidos">Apellidos</label>
+                                <input type="text" id="regApellidos" name="apellidos" placeholder="Ej: Pérez" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group-field">
+                            <label for="regEmail">Correo electrónico</label>
+                            <input type="email" id="regEmail" name="email" placeholder="ejemplo@correo.com" required>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div class="form-group-field">
+                                <label for="regPassword">Contraseña</label>
+                                <input type="password" id="regPassword" name="password" placeholder="••••••••" required>
+                            </div>
+                            <div class="form-group-field">
+                                <label for="regPasswordConfirm">Confirmar contraseña</label>
+                                <input type="password" id="regPasswordConfirm" name="password_confirmacion" placeholder="••••••••" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group-field">
+                            <label for="regRol">Deseo registrarme como</label>
+                            <select id="regRol" name="rol" class="modal-select-field">
+                                <option value="CLIENTE">Cliente (Solicitar servicios)</option>
+                                <option value="PROVEEDOR">Proveedor (Ofrecer servicios)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group-field">
+                            <label for="regTelefono">Telefono</label>
+                            <input type="text" id="regTelefono" name="telefono" placeholder="+57-000-000-0000" >
+                        </div>
+
+                        <button type="submit" class="btn-login-submit">Crear Cuenta</button>
+                    </form>
+
+                    <p class="login-footer-register">
+                        ¿Ya tienes una cuenta? <a href="users/iniciar-sesion.html" id="linkIrALogin">Inicia sesión</a>
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    {% include 'includes/runtime-bec.html' %}
+
+    <!-- Estilos CSS Modal -->
+    <style>
+    .nav-link.active-link {
+        border: 1.5px solid #2563eb !important;
+        background-color: #eff6ff !important;
+        color: #2563eb !important;
+        border-radius: 0.5rem !important;
+        padding: 0.4rem 0.85rem !important;
+        font-weight: 700 !important;
+        cursor: default !important;
+        pointer-events: none !important;
+        text-decoration: none !important;
+        display: inline-block;
+    }
+
+    .modal-login-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(15, 23, 42, 0.55);
+        backdrop-filter: blur(6px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+    }
+
+    .modal-login-overlay.activo {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .modal-login-container {
+        background: #ffffff;
+        border-radius: 24px;
+        padding: 32px 28px;
+        width: 100%;
+        max-width: 440px;
+        position: relative;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        transform: translateY(-15px);
+        transition: transform 0.25s ease;
+        text-align: center;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .modal-login-overlay.activo .modal-login-container {
+        transform: translateY(0);
+    }
+
+    .btn-cerrar-modal {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #64748B;
+        cursor: pointer;
+        border-radius: 8px;
+        line-height: 1;
+        padding: 4px 8px;
+    }
+
+    .btn-cerrar-modal:hover {
+        background-color: #F1F5F9;
+        color: #0F172A;
+    }
+
+    .modal-login-container .login-logo-badge {
+        width: 48px;
+        height: 48px;
+        background-color: #1A68FF;
+        color: #ffffff;
+        font-weight: 800;
+        font-size: 1.3rem;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 8px;
+    }
+
+    .modal-login-container .login-title-text {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #0F172A;
+        margin: 0 0 4px 0;
+    }
+
+    .modal-login-container .login-subtitle-text {
+        color: #64748B;
+        font-size: 0.85rem;
+        margin: 0 0 16px 0;
+    }
+
+    .modal-login-container .user-avatar-circle {
+        width: 44px;
+        height: 44px;
+        background-color: #EFF6FF;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 14px auto;
+        color: #1A68FF;
+    }
+
+    .modal-login-container .form-group-field {
+        margin-bottom: 12px;
+        text-align: left;
+    }
+
+    .modal-login-container .form-group-field label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    .modal-login-container .form-group-field input,
+    .modal-login-container .modal-select-field {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid #CBD5E1;
+        background-color: #F8FAFC;
+        font-size: 0.875rem;
+        color: #0F172A;
+        outline: none;
+        transition: all 0.2s ease;
+    }
+
+    .modal-login-container .form-group-field input:focus,
+    .modal-login-container .modal-select-field:focus {
+        background-color: #ffffff;
+        border-color: #1A68FF;
+        box-shadow: 0 0 0 3px rgba(26, 104, 255, 0.15);
+    }
+
+    .modal-login-container .btn-login-submit {
+        width: 100%;
+        background-color: #1A68FF;
+        color: #ffffff;
+        font-weight: 700;
+        padding: 12px;
+        border-radius: 10px;
+        border: none;
+        font-size: 0.95rem;
+        cursor: pointer;
+        margin-top: 8px;
+        transition: background-color 0.2s ease;
+    }
+
+    .modal-login-container .btn-login-submit:hover {
+        background-color: #0052E0;
+    }
+
+    .modal-login-container .login-footer-register {
+        font-size: 0.85rem;
+        color: #64748B;
+        margin-top: 14px;
+    }
+
+    .modal-login-container .login-footer-register a {
+        color: #1A68FF;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .modal-login-container .login-footer-register a:hover {
+        text-decoration: underline;
+    }
+    
+    @media (min-width: 769px) {
+        .main-nav ul, .nav-list {
+            display: flex !important;
+            align-items: center !important;
+            gap: 1.25rem !important;
+            list-style: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    }
+
+    .nav-link {
+        white-space: nowrap !important;
+    }
+</style>
+    {% block extra_body %}{% endblock %}
+</body>
+</html>
