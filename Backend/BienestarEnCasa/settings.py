@@ -157,11 +157,6 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
-    # Solo JSON: si alguien abre una URL de la API en el navegador no se muestra la
-    # interfaz "Django REST framework" (H-11). Las páginas HTML no se ven afectadas.
-    'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
-    ),
 }
 
 

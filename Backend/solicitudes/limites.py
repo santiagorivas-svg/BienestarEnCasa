@@ -84,25 +84,3 @@ def validar_conflicto_proveedor(proveedor, fecha, hora, duracion_minutos, exclui
             raise ValidationError({
                 'hora_solicitada': 'El proveedor ya tiene una reserva confirmada que se cruza con ese horario.'
             })
-
-
-
-def horarios_ocupados_proveedor(proveedor, desde):
-    """Intervalos con reserva ACEPTADA del proveedor desde una fecha (sin datos del cliente),
-    para que el formulario de solicitud oculte las horas que ya no están libres.
-    Solo cuentan las aceptadas, igual que validar_conflicto_proveedor."""
-    ocupados = []
-    for fecha, hora, duracion in SolicitudReserva.objects.filter(
-        proveedor=proveedor,
-        fecha_solicitada__gte=desde,
-        estado=SolicitudReserva.Estado.ACEPTADA,
-    ).order_by('fecha_solicitada', 'hora_solicitada').values_list(
-        'fecha_solicitada', 'hora_solicitada', 'duracion_minutos_copia'
-    ):
-        inicio, fin = _intervalo(fecha, hora, duracion)
-        ocupados.append({
-            'fecha': fecha.isoformat(),
-            'hora_inicio': inicio.strftime('%H:%M'),
-            'hora_fin': fin.strftime('%H:%M'),
-        })
-    return ocupados
