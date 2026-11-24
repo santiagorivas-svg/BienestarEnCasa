@@ -34,6 +34,9 @@ from .serializers import (
     PeriodoNoDisponibleProveedorSerializer
 )
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from urllib.parse import quote
+from django.urls import reverse
+from django.utils import timezone
 
 class RegistroView(generics.CreateAPIView):
     permission_classes = (permissions.AllowAny,)
@@ -450,7 +453,13 @@ class GestionarDisponibilidadPageView(APIView):
     template_name = 'users/disponibilidad-proveedor.html'
 
     def handle_exception(self, exc):
-        if isinstance(exc, (NotAuthenticated, AuthenticationFailed, PermissionDenied)):
+        # Enlace abierto sin sesión (p. ej. pegado en una ventana privada): se va al inicio,
+        # se abre el inicio de sesión y, al entrar, se vuelve a esta misma página (H-11).
+        if isinstance(exc, (NotAuthenticated, AuthenticationFailed)):
+            destino = quote(self.request.get_full_path(), safe='/?=&')
+            return redirect(f"{reverse('pagina-inicio')}?login=1&next={destino}")
+        # Con sesión pero sin ser proveedor: no es su página
+        if isinstance(exc, PermissionDenied):
             return redirect('pagina-inicio')
         return super().handle_exception(exc)
 
@@ -646,4 +655,7 @@ class DisponibilidadPublicaView(APIView):
             }
             for p in proveedor.periodos_no_disponibles.all().order_by('fecha_inicio')
         ]
-        return Response({'configurado': bool(dias), 'dias': dias, 'periodos': periodos})
+        # Horas ya confirmadas (sin datos del cliente) para que el formulario no las ofrezca
+        from solicitudes.limites import horarios_ocupados_proveedor
+        ocupados = horarios_ocupados_proveedor(proveedor, timezone.localdate())
+        return Response({'configurado': bool(dias), 'dias': dias, 'periodos': periodos, 'ocupados': ocupados})
